@@ -2,19 +2,19 @@ package org.krypto.logic;
 
 public class DES implements Cypher {
 
-    class DESKeyException extends Exception {
+    class DESKeyException extends Exception { // Klasa do wyjątków klucza DES
         public DESKeyException(String message) {
             super(message);
         }
     }
 
-    private String stringKey;
-    private byte[] baseKey; // 64-bit key
-    private byte[][] subkeys; // Subkeys for each round
-    private static final int BLOCK_SIZE = 8; // 64 bits
-    private static final int KEY_SIZE = 8; // 64 bits
-    private static final int ROUNDS = 16; // Number of rounds for DES
-    private static final byte[] S_BOX =  {
+    private String stringKey; // Klucz w formacie string
+    private byte[] baseKey; // Podstawowy klucz 64-bitowy
+    private byte[][] subkeys; // Tablica która przechowuje podklucze z każdej rundy
+    private static final int BLOCK_SIZE = 8; // 64-bitowy blok
+    private static final int KEY_SIZE = 8; // 64-bitowy klucz
+    private static final int ROUNDS = 16; // Liczba rund dla algorytmu DES
+    private static final byte[] S_BOX =  { // tablica S-box
         14, 4, 13, 1, 2, 15, 11, 8, 3, 10, 6, 12, 5, 9, 0, 7, // S1
         0, 15, 7, 4, 14, 2, 13, 1, 10, 6, 12, 11, 9, 5, 3, 8,
         4, 1, 14, 8, 13, 6, 2, 11, 15, 12, 9, 7, 3, 10, 5, 0,   
@@ -49,7 +49,7 @@ public class DES implements Cypher {
         2, 1, 14, 7, 4, 10, 8, 13, 15, 12, 9, 0, 3, 5, 6, 11
     };
     
-    private static final byte[] P_BLOCK = {
+    private static final byte[] P_BLOCK = { // Permutacja do szyfrowania
         16, 7, 20, 21,
         29, 12, 28, 17,
         1, 15, 23, 26,
@@ -62,75 +62,75 @@ public class DES implements Cypher {
 
     DES(){
         try {
-            setKeyHexx("0123456789ABCDEF");
+            setKeyHexx("0123456789ABCDEF"); // Konstruktor domyślny który wywołuję metodę setKeyHexx
         } catch (DESKeyException e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public void encrypt(byte[] message ) {
+    public void encrypt(byte[] message ) { // TODO: Implementacja algorytmu DES
         throw new UnsupportedOperationException("Not supported yet.");
 
     }
 
     @Override
-    public void decrypt(byte[] message) {
+    public void decrypt(byte[] message) { // TODO: Implementacja algorytmu DES
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public void setKeyString(String key) throws Exception {
+    public void setKeyString(String key) throws Exception { // Zamiana klucza z stringa na bajty
         this.baseKey = key.getBytes("UTF-16BE");
 
-        if (testKey()) {
-            this.stringKey = key;
-            subkeys = generateKeys(); 
+        if (testKey()) { // Sprawdzamy czy warunki klucza są spełnione
+            this.stringKey = key; // Jeśli tak to przypisujemy klucz
+            subkeys = generateKeys(); // I gnerujemy podklucze
         }
     }
 
-    public void setKeyHexx(String key) throws DESKeyException {
-        this.baseKey = new byte[KEY_SIZE];
-        for (int i = 0; i < KEY_SIZE; i++) {
+    public void setKeyHexx(String key) throws DESKeyException { // Zamiana klucza z stringa na HEX
+        this.baseKey = new byte[KEY_SIZE]; // 64-bitowy klucz
+        for (int i = 0; i < KEY_SIZE; i++) { // Zamiana klucza z HEX na bajty
             this.baseKey[i] = (byte) Integer.parseInt(key.substring(i * 2, i * 2 + 2), 16);
         }
-        if (testKey()) {
-            this.stringKey = key;
-            subkeys = generateKeys(); 
+        if (testKey()) { // Sprawdzamy czy warunki klucza są spełnione
+            this.stringKey = key; // Jeśli tak to przypisujemy klucz
+            subkeys = generateKeys(); // I gnerujemy podklucze
         }
     }
 
-    public boolean testKey() throws DESKeyException {
+    public boolean testKey() throws DESKeyException { // Test klucza
         if (this.baseKey == null) {
-            throw new DESKeyException("Klucz jest pusty!");
+            throw new DESKeyException("Klucz jest pusty!"); // Klucz nie może być pusty jak jest to DESKeyException
         }
 
         if(this.baseKey.length > KEY_SIZE) {
-            throw new DESKeyException("Klucz jest za długi!");
+            throw new DESKeyException("Klucz jest za długi!"); // Klucz nie może być dłuższy niż 64 bity jak jest to DESKeyException
         }
         if(this.baseKey.length < KEY_SIZE) {
-            throw new DESKeyException("Klucz jest za krótki!");
+            throw new DESKeyException("Klucz jest za krótki!"); // Klucz nie może być krótszy niż 64 bity jak jest to DESKeyException
         }
         return true;
     }
 
     public byte[][] generateKeys() {
 
-        final byte[] PC1 = {57, 49, 41, 33, 25, 17, 9, 1, 58, 50, 42, 34, 26, 18, 10, 2, 59, 51, 43, 35, 27, 19, 11, 3, 60, 52, 44, 36, 63, 55, 47, 39, 31, 23, 15, 7, 62, 54, 46, 38, 30, 22, 14, 6, 61, 53, 45, 37, 29, 21, 13, 5, 28, 20, 12, 4};
-        final byte[] PC2 = {14, 17, 11, 24, 1, 5, 3, 28, 15, 6, 21, 10, 23, 19, 12, 4, 26, 8, 16, 7, 27, 20, 13, 2};
-        final byte[] shifts = {1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1};
+        final byte[] PC1 = {57, 49, 41, 33, 25, 17, 9, 1, 58, 50, 42, 34, 26, 18, 10, 2, 59, 51, 43, 35, 27, 19, 11, 3, 60, 52, 44, 36, 63, 55, 47, 39, 31, 23, 15, 7, 62, 54, 46, 38, 30, 22, 14, 6, 61, 53, 45, 37, 29, 21, 13, 5, 28, 20, 12, 4}; // Permutacja klucza 64-bitowego
+        final byte[] PC2 = {14, 17, 11, 24, 1, 5, 3, 28, 15, 6, 21, 10, 23, 19, 12, 4, 26, 8, 16, 7, 27, 20, 13, 2}; // Permutacja klucza 56-bitowego
+        final byte[] shifts = {1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1}; // Liczba przesunięć w każdej rundzie
 
-        byte[] key = new byte[KEY_SIZE]; // 64-bit key
-        byte[] C = new byte[28]; // Left half of the key
-        byte[] D = new byte[28]; // Right half of the key
-        byte[][] K = new byte[ROUNDS][]; // Subkeys for each round 
+        byte[] key = new byte[KEY_SIZE]; // 64-bitowy klucz
+        byte[] C = new byte[28]; // Lewa połowa klucza
+        byte[] D = new byte[28]; // Prawa połowa klucza
+        byte[][] K = new byte[ROUNDS][]; // Tablica na podklucze
 
         permute(key, PC1);
 
-        byte[] key56 = new byte[56]; // 56-bit key after PC1
+        byte[] key56 = new byte[56]; // 56-bitowy klucz
         for (int i = 0; i < 56; i++) {
             key56[i] = key[PC1[i] - 1];
         }
-        // Split the key into two halves
+        // Rozdzielenie klucza na dwie 28-bitowe części
         System.arraycopy(key56, 0, C, 0, 28);
         System.arraycopy(key56, 28, D, 0, 28);
         
@@ -139,15 +139,16 @@ public class DES implements Cypher {
             // Perform left shifts
             C = leftShift(C, shifts[i]);
             D = leftShift(D, shifts[i]);
-            // Combine C and D into K
+            // Złączenie obu połówek klucza
+            // i permutacja do 48-bitowego klucza
             byte[] combinedKey = concatenate(C, D);
             K[i] = permute(combinedKey, PC2); 
         }
-        return K; // Return the last subkey for demonstration purposes
+        return K; // Zwróć tablicy z podkluczami
 
     }
 
-    private byte[] leftShift(byte[] halfKey, int shifts) {
+    private byte[] leftShift(byte[] halfKey, int shifts) { // Funkcja do przesuwania bitów do generowania podkluczy
         byte[] shiftedKey = new byte[halfKey.length];
         for (int i = 0; i < halfKey.length; i++) {
             shiftedKey[i] = halfKey[(i + shifts) % halfKey.length];
@@ -155,7 +156,7 @@ public class DES implements Cypher {
         return shiftedKey;
     }
 
-    private byte[] permute(byte[] block, byte[] permutation) {
+    private byte[] permute(byte[] block, byte[] permutation) { // Funkcja do permutacji bitów do generowania podkluczy
         byte[] permutedBlock = new byte[block.length];
         for (int i = 0; i < permutation.length; i++) {
             permutedBlock[i] = block[permutation[i] - 1];
@@ -163,7 +164,7 @@ public class DES implements Cypher {
         return permutedBlock;
     }
 
-    private byte[] concatenate(byte[] left, byte[] right) {
+    private byte[] concatenate(byte[] left, byte[] right) { // Funkcja do łączenia dwóch tablic bajtów
         byte[] result = new byte[left.length + right.length];
         System.arraycopy(left, 0, result, 0, left.length);
         System.arraycopy(right, 0, result, left.length, right.length);
