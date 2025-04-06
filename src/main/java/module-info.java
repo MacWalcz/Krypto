@@ -4,7 +4,7 @@ module org.krypto.krypto {
 
 
     opens org.krypto.krypto to javafx.fxml;
-    exports org.krypto.krypto;
+    exports org.krypto.logic;
     exports org.krypto.gui;
     opens org.krypto.gui to javafx.fxml;
 }
