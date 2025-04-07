@@ -6,17 +6,20 @@ import java.util.List;
 
 public class DES implements Cypher {
 
-    class DESKeyException extends Exception { // Klasa do wyjątków klucza DES
+    class DESKeyException extends Exception {
         public DESKeyException(String message) {
             super(message);
         }
     }
+
     private String stringKey; // Klucz w formacie HEX
-    private byte[] baseKey; // Podstawowy klucz 64-bitowy
+    private byte[] baseKey;   // Podstawowy klucz 64-bitowy
     private byte[][] subkeys; // Tablica która przechowuje podklucze z każdej rundy
     private static final int BLOCK_SIZE = 8; // 64-bitowy blok
-    private static final int KEY_SIZE = 8; // 64-bitowy klucz
-    private static final int ROUNDS = 16; // Liczba rund dla algorytmu DES
+    private static final int KEY_SIZE = 8;   // 64-bitowy klucz
+    private static final int ROUNDS = 16;    // Liczba rund dla algorytmu DES
+
+    // S-boxy
     private static final byte[][][] S_BOXES = {
             { // S1
                     {14,4,13,1,2,15,11,8,3,10,6,12,5,9,0,7},
@@ -67,16 +70,16 @@ public class DES implements Cypher {
                     {2,1,14,7,4,10,8,13,15,12,9,0,3,5,6,11}
             }
     };
-    
-    private static final byte[] P_BLOCK = { // Permutacja do szyfrowania
-        16, 7, 20, 21,
-        29, 12, 28, 17,
-        1, 15, 23, 26,
-        5, 18, 31, 10,
-        2, 8, 24, 14,
-        32, 27, 3, 9,
-        19, 13, 30, 6,
-        22, 11, 4, 25
+
+    private static final byte[] P_BLOCK = {
+            16, 7, 20, 21,
+            29, 12, 28, 17,
+            1, 15, 23, 26,
+            5, 18, 31, 10,
+            2, 8, 24, 14,
+            32, 27, 3, 9,
+            19, 13, 30, 6,
+            22, 11, 4, 25
     };
 
     private static final byte[] E_BLOCK = {
@@ -88,7 +91,7 @@ public class DES implements Cypher {
             20, 21, 22, 23, 24, 25,
             24, 25, 26, 27, 28, 29,
             28, 29, 30, 31, 32, 1
-            };
+    };
 
     private static final byte[] IP = {
             58, 50, 42, 34, 26, 18, 10, 2,
@@ -114,130 +117,130 @@ public class DES implements Cypher {
 
     public DES(){
         try {
-            setKeyHexx("0123456789ABCDEF"); // Konstruktor domyślny który wywołuję metodę setKeyHexx
+            setKeyHexx("0123456789ABCDEF"); // Konstruktor domyślny
         } catch (DESKeyException e) {
             e.printStackTrace();
         }
     }
 
-
     @Override
-    public List<byte[]> encrypt(List<byte[]> blocks) { // Szyfrowanie wiadomości
+    public List<byte[]> encrypt(List<byte[]> blocks) {
         Padding.padMessage(blocks);
-        List<byte[]> encryptedBlocks = new ArrayList<>(); // Lista na zaszyfrowane bloki
-
-        for (byte[] block : blocks) { // Dla każdego bloku
-            byte[] encryptedBlock = encryptBlock(block);// Szyfrowanie bloku
-            encryptedBlocks.add(encryptedBlock); // Dodanie zaszyfrowanego bloku do listy
+        List<byte[]> encryptedBlocks = new ArrayList<>();
+        for (byte[] block : blocks) {
+            byte[] encryptedBlock = encryptBlock(block);
+            encryptedBlocks.add(encryptedBlock);
         }
         return encryptedBlocks;
-
     }
 
-   @Override
-    public List<byte[]> decrypt(List<byte[]> blocks) { // Odszyfrowanie wiadomości
-
-        List<byte[]> decryptedBlocks = new ArrayList<>(); // Lista na odszyfrowane bloki
-
-        for (byte[] block : blocks) { // Dla każdego bloku
-            byte[] decryptedBlock = decryptBlock(block); // Odszyfrowanie bloku
-            decryptedBlocks.add(decryptedBlock); // Dodanie odszyfrowanego bloku do listy
+    @Override
+    public List<byte[]> decrypt(List<byte[]> blocks) {
+        List<byte[]> decryptedBlocks = new ArrayList<>();
+        for (byte[] block : blocks) {
+            byte[] decryptedBlock = decryptBlock(block);
+            decryptedBlocks.add(decryptedBlock);
         }
         Padding.unpadMessage(decryptedBlocks);
         return decryptedBlocks;
     }
 
-    public void setKeyHexx(String key) throws DESKeyException { // Zamiana klucza z stringa na HEX
-        this.baseKey = new byte[KEY_SIZE]; // 64-bitowy klucz
-        for (int i = 0; i < KEY_SIZE; i++) { // Zamiana klucza z HEX na bajty
+    public void setKeyHexx(String key) throws DESKeyException {
+        this.baseKey = new byte[KEY_SIZE];
+        for (int i = 0; i < KEY_SIZE; i++) {
             this.baseKey[i] = (byte) Integer.parseInt(key.substring(i * 2, i * 2 + 2), 16);
         }
-        if (testKey()) { // Sprawdzamy czy warunki klucza są spełnione
-            this.stringKey = key; // Jeśli tak to przypisujemy klucz
-            subkeys = generateKeys(); // I gnerujemy podklucze
+        if (testKey()) {
+            this.stringKey = key;
+            subkeys = generateKeys();
         }
     }
 
-    public void setBaseKey(byte[] baseKey) throws DESKeyException  {
-
+    public void setBaseKey(byte[] baseKey) throws DESKeyException {
         if(testKey()) {
             this.baseKey = baseKey;
             this.subkeys = generateKeys();
         }
-
     }
 
-    public boolean testKey() throws DESKeyException { // Test klucza
+    public boolean testKey() throws DESKeyException {
         if (this.baseKey == null) {
-            throw new DESKeyException("Klucz jest pusty!"); // Klucz nie może być pusty jak jest to DESKeyException
+            throw new DESKeyException("Klucz jest pusty!");
         }
-
-        if(this.baseKey.length > KEY_SIZE) {
-            throw new DESKeyException("Klucz jest za długi!"); // Klucz nie może być dłuższy niż 64 bity jak jest to DESKeyException
-        }
-        if(this.baseKey.length < KEY_SIZE) {
-            throw new DESKeyException("Klucz jest za krótki!"); // Klucz nie może być krótszy niż 64 bity jak jest to DESKeyException
+        if(this.baseKey.length != KEY_SIZE) {
+            throw new DESKeyException("Klucz musi mieć 8 bajtów!");
         }
         return true;
     }
 
     public byte[][] generateKeys() {
+        // Tabele do generowania kluczy
+        final byte[] PC1 = {
+                57, 49, 41, 33, 25, 17, 9,
+                1, 58, 50, 42, 34, 26, 18,
+                10, 2, 59, 51, 43, 35, 27,
+                19, 11, 3, 60, 52, 44, 36,
+                63, 55, 47, 39, 31, 23, 15,
+                7, 62, 54, 46, 38, 30, 22,
+                14, 6, 61, 53, 45, 37, 29,
+                21, 13, 5, 28, 20, 12, 4
+        };
+        final byte[] PC2 = {
+                14, 17, 11, 24, 1, 5,
+                3, 28, 15, 6, 21, 10,
+                23, 19, 12, 4, 26, 8,
+                16, 7, 27, 20, 13, 2,
+                41, 52, 31, 37, 47, 55,
+                30, 40, 51, 45, 33, 48,
+                44, 49, 39, 56, 34, 53,
+                46, 42, 50, 36, 29, 32
+        };
+        final byte[] shifts = {
+                1, 1, 2, 2, 2, 2, 2, 2,
+                1, 2, 2, 2, 2, 2, 2, 1
+        };
 
-        final byte[] PC1 = {57, 49, 41, 33, 25, 17, 9, 1, 58, 50, 42, 34, 26, 18, 10, 2, 59, 51, 43, 35, 27, 19, 11, 3, 60, 52, 44, 36, 63, 55, 47, 39, 31, 23, 15, 7, 62, 54, 46, 38, 30, 22, 14, 6, 61, 53, 45, 37, 29, 21, 13, 5, 28, 20, 12, 4}; // Permutacja klucza 64-bitowego
-        final byte[] PC2 = {14, 17, 11, 24, 1, 5, 3, 28, 15, 6, 21, 10, 23, 19, 12, 4, 26, 8, 16, 7, 27, 20, 13, 2}; // Permutacja klucza 56-bitowego
-        final byte[] shifts = {1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1}; // Liczba przesunięć w każdej rundzie
+        byte[][] K = new byte[ROUNDS][]; // 16 podkluczy
 
-        byte[] C = new byte[4]; // Lewa połowa klucza
-        byte[] D = new byte[4]; // Prawa połowa klucza
-        byte[][] K = new byte[ROUNDS][]; // Tablica na podklucze
-
+        // 1) PC1 (64->56bit)
         byte[] key56 = permuteBytes(this.baseKey, PC1);
 
-
+        // 2) Rozdzielamy bitowo 56 bitów na C i D (po 28bit)
+        byte[] C = new byte[4];
+        byte[] D = new byte[4];
         for (int i = 0; i < 28; i++) {
-            int bitVal = getBit(key56, i);
-            setBit(C, i, bitVal);
+            setBit(C, i, getBit(key56, i));
         }
         for (int i = 28; i < 56; i++) {
-            int bitVal = getBit(key56, i);
-            setBit(D, i - 28, bitVal);
+            setBit(D, i - 28, getBit(key56, i));
         }
-        // Generowanie podkluczy dla 16 rund
+
+        // 3) Generujemy 16 subkeys po 48 bitów
         for (int i = 0; i < ROUNDS; i++) {
-            // Przesunięcie w lewo bitów zgodnie z shifts
-            C = leftShift(C, shifts[i],28);
-            D = leftShift(D, shifts[i],28);
-            // Złączenie obu połówek klucza
-            // i permutacja do 48-bitowego klucza
-            byte[] combinedKey = concatenate(C, D,28);
-            K[i] = permuteBytes(combinedKey, PC2);
+            C = leftShift(C, shifts[i], 28);
+            D = leftShift(D, shifts[i], 28);
+            byte[] CD = concatenate(C, D, 28); // 56 bitów
+            // PC2 -> 48 bitów
+            K[i] = permuteBytes(CD, PC2);
         }
-        return K; // Zwróć tablicy z podkluczami
+        return K;
     }
 
-    private byte[] leftShift(byte[] input, int n, int bitSize) {
+    private byte[] leftShift(byte[] data, int n, int usedBits) {
         for (int i = 0; i < n; i++) {
-            int firstBit = getBit(input, 0);
-            for (int j = 0; j < bitSize - 1; j++) {
-                int nextBit = getBit(input, j + 1);
-                setBit(input, j, nextBit);
+            int firstBit = getBit(data, 0);
+            for (int j = 0; j < usedBits - 1; j++) {
+                setBit(data, j, getBit(data, j + 1));
             }
-            setBit(input, bitSize - 1, firstBit);
+            setBit(data, usedBits - 1, firstBit);
         }
-        return input;
+        return data;
     }
 
-    private byte[] permuteBytes(byte[] input, byte[] table) {
-        byte[] output = new byte[(int) Math.ceil(table.length / 8.0)];
-        for (int i = 0; i < table.length; i++) {
-            int bit = getBit(input, table[i] - 1);
-            setBit(output, i, bit);
-        }
-        return output;
-    }
     private byte[] concatenate(byte[] a, byte[] b, int bitsEach) {
-        int totalBits = bitsEach * 2; // 56
-        byte[] result = new byte[(totalBits + 7) / 8]; // 56 bitów = 7 bajtów
+        // 28+28=56 => 7 bajtów
+        int totalBits = bitsEach * 2;
+        byte[] result = new byte[(totalBits + 7)/8];
         for (int i = 0; i < bitsEach; i++) {
             setBit(result, i, getBit(a, i));
             setBit(result, i + bitsEach, getBit(b, i));
@@ -245,14 +248,13 @@ public class DES implements Cypher {
         return result;
     }
 
-    private void setBit(byte[] data, int bitIndex, int value) {
-        int byteIndex = bitIndex / 8;
-        int bitPosition = 7 - (bitIndex % 8);
-        if (value == 1) {
-            data[byteIndex] |= (1 << bitPosition);
-        } else {
-            data[byteIndex] &= ~(1 << bitPosition);
+    private byte[] permuteBytes(byte[] input, byte[] table) {
+        byte[] output = new byte[(int) Math.ceil(table.length/8.0)];
+        for (int i = 0; i < table.length; i++) {
+            int bit = getBit(input, table[i] - 1);
+            setBit(output, i, bit);
         }
+        return output;
     }
 
     private int getBit(byte[] data, int bitIndex) {
@@ -261,44 +263,55 @@ public class DES implements Cypher {
         return (data[byteIndex] >> bitPos) & 1;
     }
 
-    private byte[] XORBytes(byte[] a, byte[] b) { // Funkcja do XORowania dwóch tablic bajtów
-        byte[] result = new byte[Math.max(a.length, b.length)];
+    private void setBit(byte[] data, int bitIndex, int value) {
+        int byteIndex = bitIndex / 8;
+        int bitPos = 7 - (bitIndex % 8);
+        if (value == 1) {
+            data[byteIndex] |= (1 << bitPos);
+        } else {
+            data[byteIndex] &= ~(1 << bitPos);
+        }
+    }
+
+    private byte[] XORBytes(byte[] a, byte[] b) {
+        byte[] result = new byte[a.length];
         for (int i = 0; i < a.length; i++) {
-            result[i] = (byte) (a[i] ^ b[i]);
+            result[i] = (byte)(a[i] ^ b[i]);
         }
         return result;
     }
 
     private byte[] sBoxSubstitution(byte[] input) {
-        byte[] output = new byte[4];
+        // input=48bit => 6bit x 8 => 4bit x 8 => 32bit
+        byte[] output = new byte[4]; // 32bit
         for (int i = 0; i < 8; i++) {
             int offset = i * 6;
-            int row = (getBit(input, offset) << 1) | getBit(input, offset + 5);
-            int col = (getBit(input, offset + 1) << 3)
-                    | (getBit(input, offset + 2) << 2)
-                    | (getBit(input, offset + 3) << 1)
-                    | getBit(input, offset + 4);
+            int row = (getBit(input, offset) << 1) | getBit(input, offset+5);
+            int col = (getBit(input, offset+1) << 3) |
+                    (getBit(input, offset+2) << 2) |
+                    (getBit(input, offset+3) << 1) |
+                    getBit(input, offset+4);
             int sboxVal = S_BOXES[i][row][col];
             for (int j = 0; j < 4; j++) {
-                setBit(output, i * 4 + j, (sboxVal >> (3 - j)) & 1);
+                setBit(output, i*4 + j, (sboxVal >> (3-j)) & 1);
             }
         }
         return output;
     }
 
     private byte[] feistelFunction(byte[] R, byte[] subkey) {
-        byte[] expanded = permuteBytes(R, E_BLOCK); // 48 bits
+        // R=32->48, XOR, S-box=32, P=32
+        byte[] expanded = permuteBytes(R, E_BLOCK);
         byte[] xored = XORBytes(expanded, subkey);
-        byte[] sboxOutput = sBoxSubstitution(xored);
-        return permuteBytes(sboxOutput, P_BLOCK); // 32 bits
+        byte[] sboxOut = sBoxSubstitution(xored);
+        return permuteBytes(sboxOut, P_BLOCK);
     }
 
     public byte[] encryptBlock(byte[] block) {
-        byte[] permutedBlock = permuteBytes(block, IP); // 64->64
-        byte[] L = Arrays.copyOfRange(permutedBlock, 0, 4);  // 4 bajty => 32 bitów
-        byte[] R = Arrays.copyOfRange(permutedBlock, 4, 8);
-
-        for (int i = 0; i < 16; i++) {
+        byte[] perm = permuteBytes(block, IP); // 64bit->64bit
+        byte[] L = Arrays.copyOfRange(perm, 0, 4);
+        byte[] R = Arrays.copyOfRange(perm, 4, 8);
+        for(int i=0; i<16; i++) {
             byte[] temp = R;
             R = XORBytes(L, feistelFunction(R, subkeys[i]));
             L = temp;
@@ -308,21 +321,15 @@ public class DES implements Cypher {
     }
 
     public byte[] decryptBlock(byte[] block) {
-        byte[] permutedBlock = permuteBytes(block, IP);
-        byte[] L = Arrays.copyOfRange(permutedBlock, 0, 4);
-        byte[] R = Arrays.copyOfRange(permutedBlock, 4, 8);
-
-        for (int i = 15; i >= 0; i--) {
+        byte[] perm = permuteBytes(block, IP);
+        byte[] L = Arrays.copyOfRange(perm, 0, 4);
+        byte[] R = Arrays.copyOfRange(perm, 4, 8);
+        for(int i=15; i>=0; i--) {
             byte[] temp = R;
             R = XORBytes(L, feistelFunction(R, subkeys[i]));
             L = temp;
         }
-
         byte[] combined = concatenate(R, L, 32);
         return permuteBytes(combined, IP_INV);
     }
 }
-
-
-
-
