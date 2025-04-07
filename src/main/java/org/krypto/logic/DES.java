@@ -72,28 +72,29 @@ public class DES implements Cypher {
 
 
     @Override
-    public void encrypt(String inputFile, String outputFile) { // Szyfrowanie wiadomości
-        List<byte[]> blocks = FileDao.read(inputFile); // Odczytanie pliku z wiadomością
+    public List<byte[]> encrypt(List<byte[]> blocks) { // Szyfrowanie wiadomości
+        Padding.padMessage(blocks);
         List<byte[]> encryptedBlocks = new ArrayList<>(); // Lista na zaszyfrowane bloki
 
         for (byte[] block : blocks) { // Dla każdego bloku
-            byte[] encryptedBlock = encryptBlock(block); // Szyfrowanie bloku
+            byte[] encryptedBlock = encryptBlock(block);// Szyfrowanie bloku
             encryptedBlocks.add(encryptedBlock); // Dodanie zaszyfrowanego bloku do listy
         }
-        FileDao.write(encryptedBlocks, outputFile); // Zapisanie zaszyfrowanych bloków do pliku
+        return encryptedBlocks;
 
     }
 
    @Override
-    public void decrypt(String inputFile, String outputFile) { // Odszyfrowanie wiadomości
-        List<byte[]> blocks = FileDao.read(inputFile); // Odczytanie pliku z wiadomością
+    public List<byte[]> decrypt(List<byte[]> blocks) { // Odszyfrowanie wiadomości
+
         List<byte[]> decryptedBlocks = new ArrayList<>(); // Lista na odszyfrowane bloki
 
         for (byte[] block : blocks) { // Dla każdego bloku
             byte[] decryptedBlock = decryptBlock(block); // Odszyfrowanie bloku
             decryptedBlocks.add(decryptedBlock); // Dodanie odszyfrowanego bloku do listy
         }
-        FileDao.write(decryptedBlocks,outputFile); // Zapisanie odszyfrowanych bloków do pliku
+        Padding.unpadMessage(decryptedBlocks);
+        return decryptedBlocks;
     }
 
     public void setKeyString(String key) throws Exception { // Zamiana klucza z stringa na bajty
@@ -103,6 +104,12 @@ public class DES implements Cypher {
             this.stringKey = key; // Jeśli tak to przypisujemy klucz
             subkeys = generateKeys(); // I gnerujemy podklucze
         }
+    }
+
+    public void setBaseKey(byte[] baseKey)  {
+        this.baseKey = baseKey;
+        this.subkeys = generateKeys();
+
     }
 
     public void setKeyHexx(String key) throws DESKeyException { // Zamiana klucza z stringa na HEX
@@ -284,46 +291,30 @@ public class DES implements Cypher {
         return inverseInitialPermutation(combinedBlock); // Odwrócona inicjalna permutacja
     }
 
-    private byte[] padMessage(byte[] message) { // Padding wiadomości do 64 bitów
-        int paddingLength = BLOCK_SIZE - (message.length % BLOCK_SIZE); // Długość paddingu
-        byte[] paddedMessage = new byte[message.length + paddingLength]; // Tablica na wiadomość z paddingiem
-        System.arraycopy(message, 0, paddedMessage, 0, message.length); // Skopiowanie wiadomości do tablicy z paddingiem
-        for (int i = message.length; i < paddedMessage.length; i++) {
-            paddedMessage[i] = (byte) paddingLength; // Dodanie paddingu
-        }
-        return paddedMessage;
-    }
 
-    private byte[] unpadMessage(byte[] message) { // Usunięcie paddingu z wiadomości
-        int paddingLength = message[message.length - 1]; // Długość paddingu
-        byte[] unpaddedMessage = new byte[message.length - paddingLength]; // Tablica na wiadomość bez paddingu
-        System.arraycopy(message, 0, unpaddedMessage, 0, unpaddedMessage.length); // Skopiowanie wiadomości do tablicy bez paddingu
 
-        return unpaddedMessage; // Zwrócenie wiadomości bez paddingu
-    }
-
-    private byte[] encryptMessage(byte[] message) { // Szyfrowanie wiadomości
-        byte[] paddedMessage = padMessage(message); // Padding wiadomości
-        byte[] encryptedMessage = new byte[paddedMessage.length]; // Tablica na zaszyfrowaną wiadomość
-
-        for (int i = 0; i < paddedMessage.length; i += BLOCK_SIZE) {
-            byte[] block = new byte[BLOCK_SIZE]; // Blok do szyfrowania
-            System.arraycopy(paddedMessage, i, block, 0, BLOCK_SIZE); // Skopiowanie bloku do tablicy
-            byte[] encryptedBlock = encryptBlock(block); // Szyfrowanie bloku
-            System.arraycopy(encryptedBlock, 0, encryptedMessage, i, BLOCK_SIZE); // Skopiowanie zaszyfrowanego bloku do tablicy
-        }
-        return encryptedMessage; // Zwrócenie zaszyfrowanej wiadomości
-    }
-    private byte[] decryptMessage(byte[] message) { // Odszyfrowanie wiadomości
-        byte[] decryptedMessage = new byte[message.length]; // Tablica na odszyfrowaną wiadomość
-
-        for (int i = 0; i < message.length; i += BLOCK_SIZE) {
-            byte[] block = new byte[BLOCK_SIZE]; // Blok do odszyfrowania
-            System.arraycopy(message, i, block, 0, BLOCK_SIZE); // Skopiowanie bloku do tablicy
-            byte[] decryptedBlock = decryptBlock(block); // Odszyfrowanie bloku
-            System.arraycopy(decryptedBlock, 0, decryptedMessage, i, BLOCK_SIZE); // Skopiowanie odszyfrowanego bloku do tablicy
-        }
-        return unpadMessage(decryptedMessage); // Zwrócenie odszyfrowanej wiadomości bez paddingu
-    }
-    
+//    private byte[] encryptMessage(byte[] message) { // Szyfrowanie wiadomości
+//        byte[] paddedMessage = padMessage(message); // Padding wiadomości
+//        byte[] encryptedMessage = new byte[paddedMessage.length]; // Tablica na zaszyfrowaną wiadomość
+//
+//        for (int i = 0; i < paddedMessage.length; i += BLOCK_SIZE) {
+//            byte[] block = new byte[BLOCK_SIZE]; // Blok do szyfrowania
+//            System.arraycopy(paddedMessage, i, block, 0, BLOCK_SIZE); // Skopiowanie bloku do tablicy
+//            byte[] encryptedBlock = encryptBlock(block); // Szyfrowanie bloku
+//            System.arraycopy(encryptedBlock, 0, encryptedMessage, i, BLOCK_SIZE); // Skopiowanie zaszyfrowanego bloku do tablicy
+//        }
+//        return encryptedMessage; // Zwrócenie zaszyfrowanej wiadomości
+//    }
+//    private byte[] decryptMessage(byte[] message) { // Odszyfrowanie wiadomości
+//        byte[] decryptedMessage = new byte[message.length]; // Tablica na odszyfrowaną wiadomość
+//
+//        for (int i = 0; i < message.length; i += BLOCK_SIZE) {
+//            byte[] block = new byte[BLOCK_SIZE]; // Blok do odszyfrowania
+//            System.arraycopy(message, i, block, 0, BLOCK_SIZE); // Skopiowanie bloku do tablicy
+//            byte[] decryptedBlock = decryptBlock(block); // Odszyfrowanie bloku
+//            System.arraycopy(decryptedBlock, 0, decryptedMessage, i, BLOCK_SIZE); // Skopiowanie odszyfrowanego bloku do tablicy
+//        }
+//        return unpadMessage(decryptedMessage); // Zwrócenie odszyfrowanej wiadomości bez paddingu
+//    }
+//
 }

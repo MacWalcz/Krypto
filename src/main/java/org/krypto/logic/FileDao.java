@@ -10,10 +10,17 @@ public class FileDao {
         List<byte[]> blocks = new ArrayList<>();
         try (FileInputStream fis = new FileInputStream(fileName)) {
             byte[] buffer = new byte[8];
+            int bytesRead;
 
-            while (( fis.read(buffer)) != -1) {
-               // Skopiuj zawartość bufora do nowej tablicy
-                blocks.add(buffer.clone());
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                if (bytesRead < 8) {
+                    // Ostatni blok - skopiuj tylko przeczytane bajty
+                    byte[] lastBlock = new byte[bytesRead];
+                    System.arraycopy(buffer, 0, lastBlock, 0, bytesRead);
+                    blocks.add(lastBlock.clone());
+                } else {
+                    blocks.add(buffer.clone());
+                }
             }
             return blocks;
         } catch (IOException e) {

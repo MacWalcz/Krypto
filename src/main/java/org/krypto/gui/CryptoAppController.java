@@ -3,6 +3,7 @@ package org.krypto.gui;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
+import org.krypto.logic.Converter;
 import org.krypto.logic.DES;
 import org.krypto.logic.FileDao;
 
@@ -15,6 +16,9 @@ public class CryptoAppController {
     private List<byte[]> plainBytes = new ArrayList<>();
     private List<byte[]> cipherBytes = new ArrayList<>();
 
+    private byte[] key1;
+    private byte[] key2;
+    private byte[] key3;
 
     @FXML
     private TextField key1Field;
@@ -23,17 +27,12 @@ public class CryptoAppController {
     @FXML
     private TextField key3Field;
 
+
     @FXML
     private TextArea plainTextArea;
     @FXML
     private TextArea cipherTextArea;
 
-    @FXML
-    private ToggleGroup modeToggleGroup;
-    @FXML
-    private RadioButton fileRadio;
-    @FXML
-    private RadioButton windowRadio;
 
 
     @FXML
@@ -134,21 +133,23 @@ public class CryptoAppController {
     @FXML
     protected void onGenerateKeys() {
         byte[][] keys = des.generateKeys();
-        key1Field.setText(keys[0].toString());
-        key2Field.setText(keys[1].toString());
-        key3Field.setText(keys[2].toString());
+        key1Field.setText(Converter.fromByteToBase64(keys[0]));
+        key2Field.setText(Converter.fromByteToBase64(keys[1]));
+        key3Field.setText(Converter.fromByteToBase64(keys[2]));
     }
 
     @FXML
     protected void onEncrypt() {
-        cipherBytes = mockEncrypt();
+        des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
+        cipherBytes = des.encrypt(plainBytes);
         cipherTextArea.setText(cipherBytes.toString());
 
     }
 
     @FXML
     protected void onDecrypt() {
-        plainBytes = mockDecrypt();
+        des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
+        plainBytes = des.decrypt(cipherBytes);
         plainTextArea.setText(plainBytes.toString());
 
     }

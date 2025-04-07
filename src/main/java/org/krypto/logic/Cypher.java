@@ -1,6 +1,8 @@
 package org.krypto.logic;
 
+import java.util.List;
+
 public interface Cypher {
-    public void encrypt(String inputFile, String outputFile);
-    public void decrypt(String inputFile, String outputFile);
+    public List<byte[]> encrypt(List<byte[]> data);
+    public List<byte[]> decrypt(List<byte[]> data);
 }
