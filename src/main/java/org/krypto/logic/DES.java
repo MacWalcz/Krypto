@@ -124,12 +124,8 @@ public class DES implements Cypher {
         byte[] D = new byte[28]; // Prawa połowa klucza
         byte[][] K = new byte[ROUNDS][]; // Tablica na podklucze
 
-        permute(key, PC1);
-
-        byte[] key56 = new byte[56]; // 56-bitowy klucz
-        for (int i = 0; i < 56; i++) {
-            key56[i] = key[PC1[i] - 1];
-        }
+        byte[] key56 = permuteBits(key, PC1);
+        
         // Rozdzielenie klucza na dwie 28-bitowe części
         System.arraycopy(key56, 0, C, 0, 28);
         System.arraycopy(key56, 28, D, 0, 28);
@@ -142,10 +138,9 @@ public class DES implements Cypher {
             // Złączenie obu połówek klucza
             // i permutacja do 48-bitowego klucza
             byte[] combinedKey = concatenate(C, D);
-            K[i] = permute(combinedKey, PC2); 
+            K[i] = permuteBits(combinedKey, PC2); 
         }
         return K; // Zwróć tablicy z podkluczami
-
     }
 
     private byte[] leftShift(byte[] halfKey, int shifts) { // Funkcja do przesuwania bitów do generowania podkluczy
@@ -156,13 +151,15 @@ public class DES implements Cypher {
         return shiftedKey;
     }
 
-    private byte[] permute(byte[] block, byte[] permutation) { // Funkcja do permutacji bitów do generowania podkluczy
-        byte[] permutedBlock = new byte[block.length];
+    private byte[] permuteBits(byte[] block, byte[] permutation) {
+        byte[] result = new byte[permutation.length];
         for (int i = 0; i < permutation.length; i++) {
-            permutedBlock[i] = block[permutation[i] - 1];
+            int bit = getBit(block, permutation[i] - 1);
+            result[i] = (byte) bit;
         }
-        return permutedBlock;
+        return result;
     }
+    
 
     private byte[] concatenate(byte[] left, byte[] right) { // Funkcja do łączenia dwóch tablic bajtów
         byte[] result = new byte[left.length + right.length];
@@ -170,6 +167,13 @@ public class DES implements Cypher {
         System.arraycopy(right, 0, result, left.length, right.length);
         return result;
     }
+
+    private int getBit(byte[] data, int bitIndex) {
+        int byteIndex = bitIndex / 8;
+        int bitPos = 7 - (bitIndex % 8);
+        return (data[byteIndex] >> bitPos) & 1;
+    }
+    
 
     
     
