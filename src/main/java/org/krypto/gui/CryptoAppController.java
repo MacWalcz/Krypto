@@ -27,14 +27,17 @@ public class CryptoAppController {
     @FXML
     private TextField key3Field;
 
+    @FXML
+    private CheckBox fileCheckBox;
+
+    @FXML
+    private CheckBox windowCheckBox;
+
 
     @FXML
     private TextArea plainTextArea;
     @FXML
     private TextArea cipherTextArea;
-
-
-
     @FXML
     private TextField plainFilePath;
     @FXML
@@ -133,6 +136,7 @@ public class CryptoAppController {
     @FXML
     protected void onGenerateKeys() {
         byte[][] keys = des.generateKeys();
+        System.out.println(keys[0][0]);
         key1Field.setText(Converter.fromByteToBase64(keys[0]));
         key2Field.setText(Converter.fromByteToBase64(keys[1]));
         key3Field.setText(Converter.fromByteToBase64(keys[2]));
@@ -141,49 +145,62 @@ public class CryptoAppController {
     @FXML
     protected void onEncrypt() {
         des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
-        cipherBytes = des.encrypt(plainBytes);
-        cipherTextArea.setText(cipherBytes.toString());
+        if (fileCheckBox.isSelected()) {
+            cipherBytes = des.encrypt(plainBytes);
+            cipherTextArea.setText(cipherBytes.toString());
+        }
+        if (windowCheckBox.isSelected()) {
+
+        }
+
 
     }
 
     @FXML
     protected void onDecrypt() {
         des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
-        plainBytes = des.decrypt(cipherBytes);
-        plainTextArea.setText(plainBytes.toString());
+        if (fileCheckBox.isSelected()) {
+            plainBytes = des.decrypt(cipherBytes);
+            plainTextArea.setText(plainBytes.toString());
+        }
+        if (windowCheckBox.isSelected()) {
+
+
+        }
+
 
     }
 
-
-    protected List<byte[]> mockEncrypt() {
-        System.out.println(plainBytes);
-        List<byte[]> blocks = new ArrayList<>();
-
-        for (byte[] block : plainBytes) {
-            blocks.add(block.clone());
-        }
-        for (byte[] block : blocks) {
-            for (int i = 0; i < block.length; i++) {
-                block[i] = (byte) (block[i] + 0x1);
-            }
-        }
-
-        return blocks;
-    }
-
-    protected List<byte[]> mockDecrypt() {
-        System.out.println(cipherBytes);
-        List<byte[]> blocks = new ArrayList<>();
-
-        for (byte[] block : cipherBytes) {
-            blocks.add(block.clone());
-        }
-        for (byte[] block : blocks) {
-            for (int i = 0; i < block.length; i++) {
-                block[i] = (byte) (block[i] - 0x1);
-            }
-        }
-        return blocks;
-    }
+//
+//    protected List<byte[]> mockEncrypt() {
+//        System.out.println(plainBytes);
+//        List<byte[]> blocks = new ArrayList<>();
+//
+//        for (byte[] block : plainBytes) {
+//            blocks.add(block.clone());
+//        }
+//        for (byte[] block : blocks) {
+//            for (int i = 0; i < block.length; i++) {
+//                block[i] = (byte) (block[i] + 0x1);
+//            }
+//        }
+//
+//        return blocks;
+//    }
+//
+//    protected List<byte[]> mockDecrypt() {
+//        System.out.println(cipherBytes);
+//        List<byte[]> blocks = new ArrayList<>();
+//
+//        for (byte[] block : cipherBytes) {
+//            blocks.add(block.clone());
+//        }
+//        for (byte[] block : blocks) {
+//            for (int i = 0; i < block.length; i++) {
+//                block[i] = (byte) (block[i] - 0x1);
+//            }
+//        }
+//        return blocks;
+//    }
 
 }
