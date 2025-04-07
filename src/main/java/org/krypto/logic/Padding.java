@@ -47,7 +47,7 @@ public class Padding {
         } else {
             // Jeżeli ktoś dał blok > 8, można np. dzielić na 8-bajtowe segmenty
             // lub zgłosić błąd.
-            throw new IllegalArgumentException("Block has length > 8. Possibly already chunked incorrectly?");
+            throw new IllegalArgumentException("Blok ma więcej niż 8 bajtów");
         }
     }
 

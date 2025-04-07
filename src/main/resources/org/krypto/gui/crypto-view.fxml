@@ -25,11 +25,11 @@
 
         <!-- Wczytaj klucze -->
         <TextField fx:id="keyFilePath" promptText="Nazwa pliku kluczy" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <Button text="Wczytaj"  GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+        <Button text="Wczytaj"  GridPane.rowIndex="3" GridPane.columnIndex="1" onAction="#onOpenKeys"/>
 
         <!-- Zapisz klucze -->
         <TextField fx:id="saveKeyFilePath" promptText="Nazwa pliku kluczy" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-        <Button text="Zapisz"  GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+        <Button text="Zapisz"  GridPane.rowIndex="4" GridPane.columnIndex="1" onAction="#onSaveKeys"/>
     </GridPane>
 
     <Separator/>

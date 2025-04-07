@@ -71,18 +71,25 @@ public class CryptoAppController {
     private void onSaveCipher() {
         fileChooserMenager("save", "cipher");
     }
+    @FXML
+    private void onOpenKeys() {
+        fileChooserMenager("open", "keys");
+    }
+
+    @FXML
+    private void onSaveKeys() {
+        fileChooserMenager("save", "keys");
+    }
 
     private void fileChooserMenager(String io, String side) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Wybierz plik");
 
         if ("open".equals(io)) {
-            File selectedFile = fileChooser.showOpenDialog(null); // lub stage jeśli masz referencję
+            File selectedFile = fileChooser.showOpenDialog(null);
             if (selectedFile != null) {
                 String fileName = selectedFile.getAbsolutePath();
                 openFile(fileName, side);
-
-
             }
         }
         if ("save".equals(io)) {
@@ -116,6 +123,9 @@ public class CryptoAppController {
                 cipherBytes = blocks;
                 cipherTextArea.setText(sb.toString());
                 cipherFilePath.setText(filePath);
+            }
+            if ("keys".equals(side)) {
+
             }
         }
     }
@@ -177,6 +187,10 @@ public class CryptoAppController {
         }
 
     }
+
+
+
+
 
 //
 //    protected List<byte[]> mockEncrypt() {
