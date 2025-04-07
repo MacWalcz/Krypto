@@ -69,14 +69,14 @@ public class DES implements Cypher {
     }
 
     @Override
-    public void encrypt(byte[] message ) { // TODO: Implementacja algorytmu DES
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void encrypt(byte[] message ) { // 
+         encryptMessage(message); // Szyfrowanie wiadomości
 
     }
 
-    @Override
-    public void decrypt(byte[] message) { // TODO: Implementacja algorytmu DES
-        throw new UnsupportedOperationException("Not supported yet.");
+   @Override
+    public void decrypt(byte[] message) { // Odszyfrowanie wiadomości
+        decryptMessage(message); // Odszyfrowanie wiadomości
     }
 
     public void setKeyString(String key) throws Exception { // Zamiana klucza z stringa na bajty
@@ -119,12 +119,11 @@ public class DES implements Cypher {
         final byte[] PC2 = {14, 17, 11, 24, 1, 5, 3, 28, 15, 6, 21, 10, 23, 19, 12, 4, 26, 8, 16, 7, 27, 20, 13, 2}; // Permutacja klucza 56-bitowego
         final byte[] shifts = {1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1}; // Liczba przesunięć w każdej rundzie
 
-        byte[] key = new byte[KEY_SIZE]; // 64-bitowy klucz
         byte[] C = new byte[28]; // Lewa połowa klucza
         byte[] D = new byte[28]; // Prawa połowa klucza
         byte[][] K = new byte[ROUNDS][]; // Tablica na podklucze
 
-        byte[] key56 = permuteBits(key, PC1);
+        byte[] key56 = permuteBits(this.baseKey, PC1);
         
         // Rozdzielenie klucza na dwie 28-bitowe części
         System.arraycopy(key56, 0, C, 0, 28);
@@ -144,10 +143,9 @@ public class DES implements Cypher {
     }
 
     private byte[] leftShift(byte[] halfKey, int shifts) {
-        int totalBits = halfKey.length * 8;
         byte[] shiftedKey = new byte[halfKey.length];
-        for (int i = 0; i < totalBits; i++) {
-            int newBitPos = (i + shifts) % totalBits;
+        for (int i = 0; i < halfKey.length; i++) {
+            int newBitPos = (i + shifts) % halfKey.length; // Nowa pozycja bitu
             
             int oldBytePos = i / 8;
             int oldBitPos = i % 8;
@@ -163,7 +161,6 @@ public class DES implements Cypher {
         return shiftedKey;
     }
     
-
     private byte[] permuteBits(byte[] block, byte[] permutation) {
         byte[] result = new byte[permutation.length];
         for (int i = 0; i < permutation.length; i++) {
@@ -177,6 +174,7 @@ public class DES implements Cypher {
         byte[] result = new byte[left.length + right.length];
         System.arraycopy(left, 0, result, 0, left.length);
         System.arraycopy(right, 0, result, left.length, right.length);
+
         return result;
     }
 
@@ -185,4 +183,130 @@ public class DES implements Cypher {
         int bitPos = 7 - (bitIndex % 8);
         return (data[byteIndex] >> bitPos) & 1;
     }
+
+    private byte[] XORBytes(byte[] a, byte[] b) { // Funkcja do XORowania dwóch tablic bajtów
+        byte[] result = new byte[Math.max(a.length, b.length)];
+        for (int i = 0; i < a.length; i++) {
+            result[i] = (byte) (a[i] ^ b[i]);
+        }
+        return result;
+    }
+
+    private byte[] SBoxSubstitution(byte[] input) { // Funkcja do podstawienia S-box
+        byte[] output = new byte[4]; // 32 bity wyjścia
+        for (int i = 0; i < 8; i++) {
+            int row = ((input[i * 6] & 0x01) << 1) | ((input[i * 6 + 5] & 0x01)); // Wiersz S-box
+            int col = ((input[i * 6 + 1] & 0x01) << 3) | ((input[i * 6 + 2] & 0x01) << 2) | ((input[i * 6 + 3] & 0x01) << 1) | (input[i * 6 + 4] & 0x01); // Kolumna S-box
+            int sValue = S_BOX[row * 16 + col]; // Wartość z S-box
+            output[i / 2] |= (sValue << (4 * (1 - (i % 2)))); // Podstawienie do wyjścia
+        }
+        return output;
+    }
+
+    private byte[] feistelFunction(byte[] right, byte[] subkey) { // Funkcja Feistela
+        byte[] expandedRight = new byte[6]; // Rozszerzenie prawej części
+        for (int i = 0; i < 48; i++) {
+            expandedRight[i] = right[P_BLOCK[i] - 1]; // Rozszerzenie do 48 bitów
+        }
+        byte[] xorResult = XORBytes(expandedRight, subkey); // XOR z podkluczem
+        byte[] sBoxOutput = SBoxSubstitution(xorResult); // Podstawienie S-box
+        byte[] permutedOutput = permuteBits(sBoxOutput, P_BLOCK); // Permutacja P-block
+
+        return permutedOutput;
+    }
+
+    private byte[] initialPermutation(byte[] block) { // Inicjalna permutacja
+        byte[] permutedBlock = new byte[BLOCK_SIZE];
+        for (int i = 0; i < BLOCK_SIZE; i++) {
+            permutedBlock[i] = block[P_BLOCK[i] - 1]; // Permutacja do 64 bitów
+        }
+        return permutedBlock;
+    }
+
+    private byte[] inverseInitialPermutation(byte[] block) { // Odwrócona inicjalna permutacja
+        byte[] permutedBlock = new byte[BLOCK_SIZE];
+        for (int i = 0; i < BLOCK_SIZE; i++) {
+            permutedBlock[P_BLOCK[i] - 1] = block[i]; // Permutacja do 64 bitów
+        }
+        return permutedBlock;
+    }
+
+    private byte[] encryptBlock(byte[] block) { // Szyfrowanie bloku
+        byte[] permutedBlock = initialPermutation(block); // Inicjalna permutacja
+        byte[] left = new byte[32]; // Lewa część bloku
+        byte[] right = new byte[32]; // Prawa część bloku
+
+        System.arraycopy(permutedBlock, 0, left, 0, 32); // Lewa część bloku
+        System.arraycopy(permutedBlock, 32, right, 0, 32); // Prawa część bloku
+
+        for (int i = 0; i < ROUNDS; i++) {
+            byte[] temp = right; // Tymczasowa zmienna do przechowywania prawej części
+            right = XORBytes(left, feistelFunction(right, subkeys[i])); // XOR z funkcją Feistela
+            left = temp; // Lewa część bloku
+        }
+        byte[] combinedBlock = concatenate(left, right); // Połączenie obu części bloku
+
+        return inverseInitialPermutation(combinedBlock); // Odwrócona inicjalna permutacja
+    }
+
+    private byte[] decryptBlock(byte[] block) { // Odszyfrowanie bloku
+        byte[] permutedBlock = initialPermutation(block); // Inicjalna permutacja
+        byte[] left = new byte[32]; // Lewa część bloku
+        byte[] right = new byte[32]; // Prawa część bloku
+
+        System.arraycopy(permutedBlock, 0, left, 0, 32); // Lewa część bloku
+        System.arraycopy(permutedBlock, 32, right, 0, 32); // Prawa część bloku
+
+        for (int i = ROUNDS - 1; i >= 0; i--) {
+            byte[] temp = right; // Tymczasowa zmienna do przechowywania prawej części
+            right = XORBytes(left, feistelFunction(right, subkeys[i])); // XOR z funkcją Feistela
+            left = temp; // Lewa część bloku
+        }
+        byte[] combinedBlock = concatenate(left, right); // Połączenie obu części bloku
+
+        return inverseInitialPermutation(combinedBlock); // Odwrócona inicjalna permutacja
+    }
+
+    private byte[] padMessage(byte[] message) { // Padding wiadomości do 64 bitów
+        int paddingLength = BLOCK_SIZE - (message.length % BLOCK_SIZE); // Długość paddingu
+        byte[] paddedMessage = new byte[message.length + paddingLength]; // Tablica na wiadomość z paddingiem
+        System.arraycopy(message, 0, paddedMessage, 0, message.length); // Skopiowanie wiadomości do tablicy z paddingiem
+        for (int i = message.length; i < paddedMessage.length; i++) {
+            paddedMessage[i] = (byte) paddingLength; // Dodanie paddingu
+        }
+        return paddedMessage;
+    }
+
+    private byte[] unpadMessage(byte[] message) { // Usunięcie paddingu z wiadomości
+        int paddingLength = message[message.length - 1]; // Długość paddingu
+        byte[] unpaddedMessage = new byte[message.length - paddingLength]; // Tablica na wiadomość bez paddingu
+        System.arraycopy(message, 0, unpaddedMessage, 0, unpaddedMessage.length); // Skopiowanie wiadomości do tablicy bez paddingu
+
+        return unpaddedMessage; // Zwrócenie wiadomości bez paddingu
+    }
+
+    private byte[] encryptMessage(byte[] message) { // Szyfrowanie wiadomości
+        byte[] paddedMessage = padMessage(message); // Padding wiadomości
+        byte[] encryptedMessage = new byte[paddedMessage.length]; // Tablica na zaszyfrowaną wiadomość
+
+        for (int i = 0; i < paddedMessage.length; i += BLOCK_SIZE) {
+            byte[] block = new byte[BLOCK_SIZE]; // Blok do szyfrowania
+            System.arraycopy(paddedMessage, i, block, 0, BLOCK_SIZE); // Skopiowanie bloku do tablicy
+            byte[] encryptedBlock = encryptBlock(block); // Szyfrowanie bloku
+            System.arraycopy(encryptedBlock, 0, encryptedMessage, i, BLOCK_SIZE); // Skopiowanie zaszyfrowanego bloku do tablicy
+        }
+        return encryptedMessage; // Zwrócenie zaszyfrowanej wiadomości
+    }
+    private byte[] decryptMessage(byte[] message) { // Odszyfrowanie wiadomości
+        byte[] decryptedMessage = new byte[message.length]; // Tablica na odszyfrowaną wiadomość
+
+        for (int i = 0; i < message.length; i += BLOCK_SIZE) {
+            byte[] block = new byte[BLOCK_SIZE]; // Blok do odszyfrowania
+            System.arraycopy(message, i, block, 0, BLOCK_SIZE); // Skopiowanie bloku do tablicy
+            byte[] decryptedBlock = decryptBlock(block); // Odszyfrowanie bloku
+            System.arraycopy(decryptedBlock, 0, decryptedMessage, i, BLOCK_SIZE); // Skopiowanie odszyfrowanego bloku do tablicy
+        }
+        return unpadMessage(decryptedMessage); // Zwrócenie odszyfrowanej wiadomości bez paddingu
+    }
+    
 }
