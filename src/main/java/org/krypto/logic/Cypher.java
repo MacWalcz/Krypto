@@ -1,6 +1,6 @@
 package org.krypto.logic;
 
 public interface Cypher {
-    public void encrypt(byte[] message);
-    public void decrypt(byte[] message);
+    public void encrypt(String inputFile, String outputFile);
+    public void decrypt(String inputFile, String outputFile);
 }

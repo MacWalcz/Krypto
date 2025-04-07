@@ -1,5 +1,8 @@
 package org.krypto.logic;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class DES implements Cypher {
 
     class DESKeyException extends Exception { // Klasa do wyjątków klucza DES
@@ -7,8 +10,7 @@ public class DES implements Cypher {
             super(message);
         }
     }
-
-    private String stringKey; // Klucz w formacie string
+    private String stringKey; // Klucz w formacie HEX
     private byte[] baseKey; // Podstawowy klucz 64-bitowy
     private byte[][] subkeys; // Tablica która przechowuje podklucze z każdej rundy
     private static final int BLOCK_SIZE = 8; // 64-bitowy blok
@@ -68,15 +70,30 @@ public class DES implements Cypher {
         }
     }
 
+
     @Override
-    public void encrypt(byte[] message ) { // 
-         encryptMessage(message); // Szyfrowanie wiadomości
+    public void encrypt(String inputFile, String outputFile) { // Szyfrowanie wiadomości
+        List<byte[]> blocks = FileDao.read(inputFile); // Odczytanie pliku z wiadomością
+        List<byte[]> encryptedBlocks = new ArrayList<>(); // Lista na zaszyfrowane bloki
+
+        for (byte[] block : blocks) { // Dla każdego bloku
+            byte[] encryptedBlock = encryptBlock(block); // Szyfrowanie bloku
+            encryptedBlocks.add(encryptedBlock); // Dodanie zaszyfrowanego bloku do listy
+        }
+        FileDao.write(encryptedBlocks, outputFile); // Zapisanie zaszyfrowanych bloków do pliku
 
     }
 
    @Override
-    public void decrypt(byte[] message) { // Odszyfrowanie wiadomości
-        decryptMessage(message); // Odszyfrowanie wiadomości
+    public void decrypt(String inputFile, String outputFile) { // Odszyfrowanie wiadomości
+        List<byte[]> blocks = FileDao.read(inputFile); // Odczytanie pliku z wiadomością
+        List<byte[]> decryptedBlocks = new ArrayList<>(); // Lista na odszyfrowane bloki
+
+        for (byte[] block : blocks) { // Dla każdego bloku
+            byte[] decryptedBlock = decryptBlock(block); // Odszyfrowanie bloku
+            decryptedBlocks.add(decryptedBlock); // Dodanie odszyfrowanego bloku do listy
+        }
+        FileDao.write(decryptedBlocks,outputFile); // Zapisanie odszyfrowanych bloków do pliku
     }
 
     public void setKeyString(String key) throws Exception { // Zamiana klucza z stringa na bajty
