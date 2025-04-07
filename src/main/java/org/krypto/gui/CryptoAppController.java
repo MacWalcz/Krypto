@@ -6,6 +6,7 @@ import javafx.stage.FileChooser;
 import org.krypto.logic.DES;
 import org.krypto.logic.FileDao;
 
+import javax.swing.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +14,6 @@ import java.util.List;
 public class CryptoAppController {
     private List<byte[]> plainBytes = new ArrayList<>();
     private List<byte[]> cipherBytes = new ArrayList<>();
-
 
 
     @FXML
@@ -77,11 +77,8 @@ public class CryptoAppController {
             File selectedFile = fileChooser.showOpenDialog(null); // lub stage jeśli masz referencję
             if (selectedFile != null) {
                 String fileName = selectedFile.getAbsolutePath();
-                openFile(fileName);
-                if ("plain".equals(side))
-                    plainFilePath.setText(fileName);
-                if ("cipher".equals(side))
-                    cipherFilePath.setText(fileName);
+                openFile(fileName, side);
+
 
             }
         }
@@ -90,10 +87,7 @@ public class CryptoAppController {
             if (selectedFile != null) {
                 String fileName = selectedFile.getAbsolutePath();
                 saveFile(fileName, side);
-                if ("plain".equals(side))
-                    plainFilePath.setText(fileName);
-                if ("cipher".equals(side))
-                    cipherFilePath.setText(fileName);
+
 
             }
         }
@@ -102,45 +96,93 @@ public class CryptoAppController {
     }
 
 
-    private void openFile(String filePath) {
+    private void openFile(String filePath, String side) {
         var blocks = FileDao.read(filePath);
-        plainBytes = blocks;
+
         if (blocks != null) {
             StringBuilder sb = new StringBuilder();
             for (byte[] block : blocks) {
                 sb.append(new String(block));
             }
-            plainTextArea.setText(sb.toString());
+            if ("plain".equals(side)) {
+                plainBytes = blocks;
+                plainTextArea.setText(sb.toString());
+                plainFilePath.setText(filePath);
+            }
+            if ("cipher".equals(side)) {
+                cipherBytes = blocks;
+                cipherTextArea.setText(sb.toString());
+                cipherFilePath.setText(filePath);
+            }
         }
     }
 
     @FXML
     private void saveFile(String filePath, String side) {
 
-        if ("plain".equals(side))
+        if ("plain".equals(side)) {
             FileDao.write(plainBytes, filePath);
-        if ("cipher".equals(side))
+            plainFilePath.setText(filePath);
+        }
+        if ("cipher".equals(side)) {
             FileDao.write(cipherBytes, filePath);
+            cipherFilePath.setText(filePath);
+        }
 
     }
 
     @FXML
     protected void onGenerateKeys() {
-        //System.out.println(des.generateKeys());
-        key1Field.setText("abc123");
-        key2Field.setText("def456");
-        key3Field.setText("ghi789");
+        byte[][] keys = des.generateKeys();
+        key1Field.setText(keys[0].toString());
+        key2Field.setText(keys[1].toString());
+        key3Field.setText(keys[2].toString());
     }
 
     @FXML
     protected void onEncrypt() {
-        cipherTextArea.setText("ZASZYFROWANY: " + plainBytes);
-        cipherBytes = plainBytes;
+        cipherBytes = mockEncrypt();
+        cipherTextArea.setText(cipherBytes.toString());
+
     }
 
     @FXML
     protected void onDecrypt() {
-        plainTextArea.setText("ODSZYFROWANY: " + cipherTextArea.getText());
-        plainBytes = cipherBytes;
+        plainBytes = mockDecrypt();
+        plainTextArea.setText(plainBytes.toString());
+
     }
+
+
+    protected List<byte[]> mockEncrypt() {
+        System.out.println(plainBytes);
+        List<byte[]> blocks = new ArrayList<>();
+
+        for (byte[] block : plainBytes) {
+            blocks.add(block.clone());
+        }
+        for (byte[] block : blocks) {
+            for (int i = 0; i < block.length; i++) {
+                block[i] = (byte) (block[i] + 0x1);
+            }
+        }
+
+        return blocks;
+    }
+
+    protected List<byte[]> mockDecrypt() {
+        System.out.println(cipherBytes);
+        List<byte[]> blocks = new ArrayList<>();
+
+        for (byte[] block : cipherBytes) {
+            blocks.add(block.clone());
+        }
+        for (byte[] block : blocks) {
+            for (int i = 0; i < block.length; i++) {
+                block[i] = (byte) (block[i] - 0x1);
+            }
+        }
+        return blocks;
+    }
+
 }
