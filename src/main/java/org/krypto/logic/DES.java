@@ -143,13 +143,26 @@ public class DES implements Cypher {
         return K; // Zwróć tablicy z podkluczami
     }
 
-    private byte[] leftShift(byte[] halfKey, int shifts) { // Funkcja do przesuwania bitów do generowania podkluczy
+    private byte[] leftShift(byte[] halfKey, int shifts) {
+        int totalBits = halfKey.length * 8;
         byte[] shiftedKey = new byte[halfKey.length];
-        for (int i = 0; i < halfKey.length; i++) {
-            shiftedKey[i] = halfKey[(i + shifts) % halfKey.length];
+        for (int i = 0; i < totalBits; i++) {
+            int newBitPos = (i + shifts) % totalBits;
+            
+            int oldBytePos = i / 8;
+            int oldBitPos = i % 8;
+    
+            int bit = (halfKey[oldBytePos] >> (7 - oldBitPos)) & 1;
+            
+            int newBytePos = newBitPos / 8;
+            int newBitPosInByte = 7 - (newBitPos % 8);
+            
+            shiftedKey[newBytePos] |= (bit << newBitPosInByte);
         }
+    
         return shiftedKey;
     }
+    
 
     private byte[] permuteBits(byte[] block, byte[] permutation) {
         byte[] result = new byte[permutation.length];
@@ -160,7 +173,6 @@ public class DES implements Cypher {
         return result;
     }
     
-
     private byte[] concatenate(byte[] left, byte[] right) { // Funkcja do łączenia dwóch tablic bajtów
         byte[] result = new byte[left.length + right.length];
         System.arraycopy(left, 0, result, 0, left.length);
@@ -173,8 +185,4 @@ public class DES implements Cypher {
         int bitPos = 7 - (bitIndex % 8);
         return (data[byteIndex] >> bitPos) & 1;
     }
-    
-
-    
-    
 }
