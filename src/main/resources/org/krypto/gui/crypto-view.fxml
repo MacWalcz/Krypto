@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="org.krypto.gui.CryptoAppController"
+      spacing="10" style="-fx-padding: 20 20 20 20;">
+
+    <Label text="Algorytm TripleDES" style="-fx-font-weight: bold; -fx-font-size: 14"/>
+
+    <!-- Klucze -->
+    <GridPane hgap="10" vgap="10">
+        <Label text="Wartość I klucza" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+        <TextField fx:id="key1Field" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+        <Label text="Wartość II klucza" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+        <TextField fx:id="key2Field" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+        <Label text="Wartość III klucza" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <TextField fx:id="key3Field" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+        <Button text="Generuj klucze" onAction="#onGenerateKeys"
+                GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+
+        <!-- Wczytaj klucze -->
+        <TextField fx:id="keyFilePath" promptText="Nazwa pliku kluczy" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <Button text="Wczytaj"  GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+        <!-- Zapisz klucze -->
+        <TextField fx:id="saveKeyFilePath" promptText="Nazwa pliku kluczy" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
+        <Button text="Zapisz"  GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+    </GridPane>
+
+    <Separator/>
+
+    <!-- Szyfrowanie / Deszyfrowanie -->
+    <HBox spacing="15" VBox.vgrow="ALWAYS">
+        <!-- Tekst jawny -->
+        <VBox spacing="10">
+            <Label text="Tekst jawny"/>
+            <TextArea fx:id="plainTextArea" prefWidth="250" prefHeight="200"/>
+            <HBox spacing="10">
+                <TextField fx:id="plainFilePath" promptText="Nazwa pliku z tekstem jawnym"/>
+                <Button text="Otwórz" onAction="#onOpenPlain"/>
+                <Button text="Zapisz" onAction="#onSavePlain"/>
+            </HBox>
+        </VBox>
+
+        <!-- Środkowe przyciski -->
+        <VBox spacing="10" alignment="CENTER" prefWidth="100">
+            <Button text="Szyfruj →" onAction="#onEncrypt"/>
+            <Button text="← Deszyfruj" onAction="#onDecrypt"/>
+            <CheckBox fx:id="fileCheckBox" text="Plik" selected="true"/>
+            <CheckBox fx:id="windowCheckBox" text="Okno"/>
+        </VBox>
+
+        <!-- Szyfrogram -->
+        <VBox spacing="10">
+            <Label text="Szyfrogram"/>
+            <TextArea fx:id="cipherTextArea" prefWidth="250" prefHeight="200"/>
+            <HBox spacing="10">
+                <TextField fx:id="cipherFilePath" promptText="Nazwa pliku z szyfrogramem"/>
+                <Button text="Otwórz" onAction="#onOpenCipher"/>
+                <Button text="Zapisz" onAction="#onSaveCipher"/>
+            </HBox>
+        </VBox>
+    </HBox>
+</VBox>

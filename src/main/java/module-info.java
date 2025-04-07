@@ -1,10 +1,10 @@
-module org.krypto.krypto {
+module org.krypto.gui {
     requires javafx.controls;
     requires javafx.fxml;
-
-
-    opens org.krypto.krypto to javafx.fxml;
-    exports org.krypto.logic;
-    exports org.krypto.gui;
+    // Otwiera pakiety dla frameworka JavaFX
     opens org.krypto.gui to javafx.fxml;
+
+    // Eksportuj pakiety, aby były dostępne w innych modułach
+    exports org.krypto.gui;
+    exports org.krypto.logic;  // Jeśli chcesz eksportować także logiczny moduł
 }
