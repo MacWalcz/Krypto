@@ -3,6 +3,7 @@ package org.krypto.gui;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.stage.FileChooser;
+import org.krypto.logic.DES;
 import org.krypto.logic.FileDao;
 
 import java.io.File;
@@ -12,6 +13,8 @@ import java.util.List;
 public class CryptoAppController {
     private List<byte[]> plainBytes = new ArrayList<>();
     private List<byte[]> cipherBytes = new ArrayList<>();
+
+
 
     @FXML
     private TextField key1Field;
@@ -38,6 +41,12 @@ public class CryptoAppController {
     @FXML
     private TextField cipherFilePath;
 
+    private DES des;  // Instancja DES
+
+    // Setter do ustawienia instancji DES
+    public void setDes(DES des) {
+        this.des = des;
+    }
 
     @FXML
     private void onOpenPlain() {
@@ -86,52 +95,52 @@ public class CryptoAppController {
                 if ("cipher".equals(side))
                     cipherFilePath.setText(fileName);
 
-        }
+            }
         }
 
 
     }
 
 
-
-private void openFile(String filePath) {
-    var blocks = FileDao.read(filePath);
-    plainBytes = blocks;
-    if (blocks != null) {
-        StringBuilder sb = new StringBuilder();
-        for (byte[] block : blocks) {
-            sb.append(new String(block));
+    private void openFile(String filePath) {
+        var blocks = FileDao.read(filePath);
+        plainBytes = blocks;
+        if (blocks != null) {
+            StringBuilder sb = new StringBuilder();
+            for (byte[] block : blocks) {
+                sb.append(new String(block));
+            }
+            plainTextArea.setText(sb.toString());
         }
-        plainTextArea.setText(sb.toString());
     }
-}
 
-@FXML
-private void saveFile(String filePath, String side) {
+    @FXML
+    private void saveFile(String filePath, String side) {
 
-    if ("plain".equals(side))
-        FileDao.write(plainBytes, filePath);
-    if ("cipher".equals(side))
-        FileDao.write(cipherBytes, filePath);
+        if ("plain".equals(side))
+            FileDao.write(plainBytes, filePath);
+        if ("cipher".equals(side))
+            FileDao.write(cipherBytes, filePath);
 
-}
+    }
 
-@FXML
-protected void onGenerateKeys() {
-    key1Field.setText("abc123");
-    key2Field.setText("def456");
-    key3Field.setText("ghi789");
-}
+    @FXML
+    protected void onGenerateKeys() {
+        //System.out.println(des.generateKeys());
+        key1Field.setText("abc123");
+        key2Field.setText("def456");
+        key3Field.setText("ghi789");
+    }
 
-@FXML
-protected void onEncrypt() {
-    cipherTextArea.setText("ZASZYFROWANY: " + plainBytes);
-    cipherBytes = plainBytes;
-}
+    @FXML
+    protected void onEncrypt() {
+        cipherTextArea.setText("ZASZYFROWANY: " + plainBytes);
+        cipherBytes = plainBytes;
+    }
 
-@FXML
-protected void onDecrypt() {
-    plainTextArea.setText("ODSZYFROWANY: " + cipherTextArea.getText());
-    plainBytes = cipherBytes;
-}
+    @FXML
+    protected void onDecrypt() {
+        plainTextArea.setText("ODSZYFROWANY: " + cipherTextArea.getText());
+        plainBytes = cipherBytes;
+    }
 }

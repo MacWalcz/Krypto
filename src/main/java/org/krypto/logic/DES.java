@@ -60,7 +60,7 @@ public class DES implements Cypher {
         22, 11, 4, 25
     };
 
-    DES(){
+    public DES(){
         try {
             setKeyHexx("0123456789ABCDEF"); // Konstruktor domyślny który wywołuję metodę setKeyHexx
         } catch (DESKeyException e) {
