@@ -114,7 +114,7 @@ public class DES implements Cypher {
 
     public DES(){
         try {
-            setKeyHexx("0123456789ABCDEF"); // Konstruktor domyślny który wywołuję metodę setKeyHexx
+            setKeyHexx("133457799BBCDFF1"); // Konstruktor domyślny który wywołuję metodę setKeyHexx
         } catch (DESKeyException e) {
             e.printStackTrace();
         }
@@ -158,12 +158,9 @@ public class DES implements Cypher {
         }
     }
 
-    public void setBaseKey(byte[] baseKey) throws DESKeyException  {
-
-        if(testKey()) {
-            this.baseKey = baseKey;
-            this.subkeys = generateKeys();
-        }
+    public void setBaseKey(byte[] baseKey)  {
+        this.baseKey = baseKey;
+        this.subkeys = generateKeys();
 
     }
 
@@ -193,10 +190,15 @@ public class DES implements Cypher {
 
         byte[] key56 = permuteBytes(this.baseKey, PC1);
         
-        // Rozdzielenie klucza na dwie 28-bitowe części
-        C = Arrays.copyOfRange(key56, 0, 3);
-        D = Arrays.copyOfRange(key56, 3,7);
-        
+
+        for (int i = 0; i < 28; i++) {
+            int bitVal = getBit(key56, i);
+            setBit(C, i, bitVal);
+        }
+        for (int i = 28; i < 56; i++) {
+            int bitVal = getBit(key56, i);
+            setBit(D, i - 28, bitVal);
+        }
         // Generowanie podkluczy dla 16 rund
         for (int i = 0; i < ROUNDS; i++) {
             // Przesunięcie w lewo bitów zgodnie z shifts
