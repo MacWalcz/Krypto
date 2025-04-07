@@ -6,6 +6,7 @@ import javafx.stage.FileChooser;
 import org.krypto.logic.Converter;
 import org.krypto.logic.DES;
 import org.krypto.logic.FileDao;
+import org.krypto.logic.Generator;
 
 import javax.swing.*;
 import java.io.File;
@@ -135,8 +136,7 @@ public class CryptoAppController {
 
     @FXML
     protected void onGenerateKeys() {
-        byte[][] keys = des.generateKeys();
-        System.out.println(keys[0][0]);
+        byte[][] keys = Generator.generate8ByteKeys(3);
         key1Field.setText(Converter.fromByteToBase64(keys[0]));
         key2Field.setText(Converter.fromByteToBase64(keys[1]));
         key3Field.setText(Converter.fromByteToBase64(keys[2]));
