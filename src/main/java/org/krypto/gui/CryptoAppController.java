@@ -143,7 +143,7 @@ public class CryptoAppController {
     }
 
     @FXML
-    protected void onEncrypt() {
+    protected void onEncrypt() throws Exception {
         des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
         if (fileCheckBox.isSelected()) {
             cipherBytes = des.encrypt(plainBytes);
@@ -157,7 +157,7 @@ public class CryptoAppController {
     }
 
     @FXML
-    protected void onDecrypt() {
+    protected void onDecrypt() throws Exception {
         des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
         if (fileCheckBox.isSelected()) {
             plainBytes = des.decrypt(cipherBytes);
