@@ -107,7 +107,7 @@ public class CryptoAppController {
 
 
     private void openFile(String filePath, String side) {
-        var blocks = FileDao.read(filePath);
+        List<byte[]> blocks = FileDao.read(filePath);
 
         if (blocks != null) {
             StringBuilder sb = new StringBuilder();
@@ -125,7 +125,9 @@ public class CryptoAppController {
                 cipherFilePath.setText(filePath);
             }
             if ("keys".equals(side)) {
-
+                key1Field.setText(Converter.fromByteToBase64(blocks.get(0)));
+                key2Field.setText(Converter.fromByteToBase64(blocks.get(1)));
+                key3Field.setText(Converter.fromByteToBase64(blocks.get(2)));
             }
         }
     }
@@ -141,6 +143,13 @@ public class CryptoAppController {
             FileDao.write(cipherBytes, filePath);
             cipherFilePath.setText(filePath);
         }
+        if ("keys".equals(side)) {
+            List<byte[]> stream = new ArrayList<>();
+            stream.add(Converter.fromBase64ToByte(key1Field.getText()));
+            stream.add(Converter.fromBase64ToByte(key2Field.getText()));
+            stream.add(Converter.fromBase64ToByte(key3Field.getText()));
+            FileDao.write(stream, filePath);
+        }
 
     }
 
@@ -155,10 +164,13 @@ public class CryptoAppController {
     @FXML
     protected void onEncrypt() {
         try {
-            System.out.println(Converter.fromBase64ToByte(key1Field.getText()).length);
             des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
             if (fileCheckBox.isSelected()) {
                 cipherBytes = des.encrypt(plainBytes);
+                des.setBaseKey(Converter.fromBase64ToByte(key2Field.getText()));
+                cipherBytes = des.decrypt(cipherBytes);
+                des.setBaseKey(Converter.fromBase64ToByte(key3Field.getText()));
+                cipherBytes = des.encrypt(cipherBytes);
                 cipherTextArea.setText(cipherBytes.toString());
             }
             if (windowCheckBox.isSelected()) {
@@ -173,9 +185,13 @@ public class CryptoAppController {
     @FXML
     protected void onDecrypt() {
         try {
-            des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
+            des.setBaseKey(Converter.fromBase64ToByte(key3Field.getText()));
             if (fileCheckBox.isSelected()) {
                 plainBytes = des.decrypt(cipherBytes);
+                des.setBaseKey(Converter.fromBase64ToByte(key2Field.getText()));
+                plainBytes = des.encrypt(plainBytes);
+                des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
+                plainBytes = des.decrypt(plainBytes);
                 plainTextArea.setText(plainBytes.toString());
             }
             if (windowCheckBox.isSelected()) {
