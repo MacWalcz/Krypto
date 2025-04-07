@@ -5,83 +5,56 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Padding {
-
-    // Przykład PKCS7: jeżeli ostatni blok ma n bajtów, to do 8 bajtów
-    // dopełniamy (8 - n) bajtami, z których każdy ma wartość (8 - n).
-    public static void padMessage(List<byte[]> blocks) {
-        // Jeżeli brak bloków -> nic nie robimy
-        if (blocks == null || blocks.isEmpty()) {
-            return;
+    public static void padMessage(List<byte[]> blocks) { // Dodaje padding do ostatniego bloku wiadomości
+        if (blocks == null || blocks.isEmpty()) { // Sprawdzamy, czy lista bloków nie jest pusta
+            return; // Jeśli jest pusta, nie ma co dodawać paddingu
         }
+       
+        byte[] lastBlock = blocks.get(blocks.size() - 1); // Pobieramy ostatni blok wiadomości
+        int lastBlockLen = lastBlock.length; // Sprawdzamy długość ostatniego bloku
 
-        // Można też wyeliminować puste bloki, jeśli takie wystąpiły
-        // (opcjonalnie):
-        blocks.removeIf(b -> b == null || b.length == 0);
+        if (lastBlockLen < 8) {                 // Jeśli długość bloku jest mniejsza niż 8 bajtów
+                                                // Dodajemy padding do ostatniego bloku, aby miał długość 8 bajtów
 
-        // Ponownie sprawdzamy, czy nie zrobiło się pusto
-        if (blocks.isEmpty()) {
-            // W razie potrzeby można dodać tutaj
-            // 1 blok wypełniony 0x08 itp.
-            return;
-        }
-
-        // Bierzemy ostatni blok
-        byte[] lastBlock = blocks.get(blocks.size() - 1);
-        int lastBlockLen = lastBlock.length;
-
-        if (lastBlockLen < 8) {
-            // Ile bajtów trzeba dopakować
-            int padCount = 8 - lastBlockLen;
-            byte[] newBlock = Arrays.copyOf(lastBlock, 8);
-            // Wstawiamy bajty o wartości padCount
+            int padCount = 8 - lastBlockLen;    // Obliczamy liczbę bajtów, które musimy dodać jako padding
+            byte[] newBlock = Arrays.copyOf(lastBlock, 8); // Tworzymy nowy blok o długości 8 bajtów, kopiując zawartość ostatniego bloku
             for (int i = lastBlockLen; i < 8; i++) {
-                newBlock[i] = (byte) padCount;
+                newBlock[i] = (byte) padCount; // Wypełniamy nowy blok bajtami 
             }
-            blocks.set(blocks.size() - 1, newBlock);
-        } else if (lastBlockLen == 8) {
-            // Dodatkowy blok z samymi bajtami = 08
-            // w PKCS7, aby dać znać o pełnym bloku
-            byte[] extra = new byte[8];
-            Arrays.fill(extra, (byte) 8);
-            blocks.add(extra);
+            blocks.set(blocks.size() - 1, newBlock); // Ustawiamy nowy blok jako ostatni blok w liście bloków
+        } else if (lastBlockLen == 8) { // Jeśli długość bloku jest równa 8 bajtom, dodajemy nowy blok jako padding
+            byte[] extra = new byte[8]; // Tworzymy nowy blok o długości 8 bajtów
+            Arrays.fill(extra, (byte) 8); // Wypełniamy nowy blok bajtami o wartości 8
+            blocks.add(extra); // Dodajemy nowy blok jako padding do listy bloków
         } else {
-            // Jeżeli ktoś dał blok > 8, można np. dzielić na 8-bajtowe segmenty
-            // lub zgłosić błąd.
-            throw new IllegalArgumentException("Block has length > 8. Possibly already chunked incorrectly?");
+      
+            throw new IllegalArgumentException("Block has length > 8."); // Jeśli długość bloku jest większa niż 8 bajtów, zgłaszamy wyjątek
         }
     }
 
-    // Przykładowy unpad (PKCS7)
-    public static void unpadMessage(List<byte[]> blocks) {
-        if (blocks == null || blocks.isEmpty()) {
-            return;
+    public static void unpadMessage(List<byte[]> blocks) { // Usuwa padding z ostatniego bloku wiadomości
+        if (blocks == null || blocks.isEmpty()) { // Sprawdzamy, czy lista bloków nie jest pusta
+            return; // Jeśli jest pusta, nie ma co usuwać paddingu
         }
-        // Bierzemy ostatni blok
-        byte[] lastBlock = blocks.get(blocks.size() - 1);
-        if (lastBlock.length != 8) {
-            // coś nie tak...
-            return;
+        byte[] lastBlock = blocks.get(blocks.size() - 1); // Pobieramy ostatni blok wiadomości
+        if (lastBlock.length != 8) { // Sprawdzamy, czy długość ostatniego bloku wynosi 8 bajtów
+            return; // Jeśli długość nie wynosi 8, nie ma paddingu do usunięcia
         }
-        // Liczba bajtów do usunięcia
-        int padVal = lastBlock[7] & 0xFF;
-        if (padVal < 1 || padVal > 8) {
-            // no to nie wygląda jak PKCS7
-            return;
+        int padVal = lastBlock[7] & 0xFF; // Pobieramy wartość paddingu z ostatniego bajtu bloku
+        if (padVal < 1 || padVal > 8) { // Sprawdzamy, czy wartość paddingu jest poprawna (1-8)
+            return; // Jeśli wartość jest niepoprawna, nie usuwamy paddingu
         }
-        // sprawdzamy, czy faktycznie tyle bajtów wypełnienia jest
-        for (int i = 8 - padVal; i < 8; i++) {
-            if ((lastBlock[i] & 0xFF) != padVal) {
-                // Nie pasuje do PKCS7
-                return;
+        for (int i = 8 - padVal; i < 8; i++) { // Sprawdzamy, czy ostatnie bajty bloku zawierają poprawny padding
+            if ((lastBlock[i] & 0xFF) != padVal) { // Jeśli którykolwiek bajt nie pasuje do wartości paddingu
+                return; // Nie usuwamy paddingu
             }
         }
-        // kopiujemy tylko fragment bez wypełnienia
-        if (padVal == 8 && blocks.size() > 1) {
-            // blok był w całości wypełniony
-            blocks.remove(blocks.size() - 1);
-        } else {
-            byte[] trimmed = Arrays.copyOf(lastBlock, 8 - padVal);
-            blocks.set(blocks.size() - 1, trimmed);
+       
+        if (padVal == 8 && blocks.size() > 1) { // Jeśli cały blok to padding i istnieje więcej niż jeden blok
+            blocks.remove(blocks.size() - 1); // Usuwamy cały blok z listy
+        } else { // W przeciwnym razie
+            byte[] trimmed = Arrays.copyOf(lastBlock, 8 - padVal); // Tworzymy nowy blok bez bajtów paddingu
+            blocks.set(blocks.size() - 1, trimmed); // Zastępujemy ostatni blok obciętym blokiem
         }
     }
 }
