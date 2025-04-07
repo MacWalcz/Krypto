@@ -1,6 +1,7 @@
 module org.krypto.gui {
     requires javafx.controls;
     requires javafx.fxml;
+    requires java.desktop;
     // Otwiera pakiety dla frameworka JavaFX
     opens org.krypto.gui to javafx.fxml;
 
