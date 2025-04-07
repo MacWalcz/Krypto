@@ -143,31 +143,38 @@ public class CryptoAppController {
     }
 
     @FXML
-    protected void onEncrypt() throws Exception {
-        des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
-        if (fileCheckBox.isSelected()) {
-            cipherBytes = des.encrypt(plainBytes);
-            cipherTextArea.setText(cipherBytes.toString());
-        }
-        if (windowCheckBox.isSelected()) {
+    protected void onEncrypt() {
+        try {
+            System.out.println(Converter.fromBase64ToByte(key1Field.getText()).length);
+            des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
+            if (fileCheckBox.isSelected()) {
+                cipherBytes = des.encrypt(plainBytes);
+                cipherTextArea.setText(cipherBytes.toString());
+            }
+            if (windowCheckBox.isSelected()) {
 
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
 
     }
 
     @FXML
-    protected void onDecrypt() throws Exception {
-        des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
-        if (fileCheckBox.isSelected()) {
-            plainBytes = des.decrypt(cipherBytes);
-            plainTextArea.setText(plainBytes.toString());
+    protected void onDecrypt() {
+        try {
+            des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
+            if (fileCheckBox.isSelected()) {
+                plainBytes = des.decrypt(cipherBytes);
+                plainTextArea.setText(plainBytes.toString());
+            }
+            if (windowCheckBox.isSelected()) {
+
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        if (windowCheckBox.isSelected()) {
-
-
-        }
-
 
     }
 

@@ -113,11 +113,7 @@ public class DES implements Cypher {
     };
 
     public DES(){
-        try {
-            setKeyHexx("0123456789ABCDEF"); // Konstruktor domyślny który wywołuję metodę setKeyHexx
-        } catch (DESKeyException e) {
-            e.printStackTrace();
-        }
+
     }
 
 
@@ -159,9 +155,9 @@ public class DES implements Cypher {
     }
 
     public void setBaseKey(byte[] baseKey) throws DESKeyException  {
-
+        this.baseKey = baseKey;
         if(testKey()) {
-            this.baseKey = baseKey;
+
             this.subkeys = generateKeys();
         }
 
