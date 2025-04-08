@@ -13,13 +13,13 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CryptoAppController {
-    private List<byte[]> plainBytes = new ArrayList<>();
-    private List<byte[]> cipherBytes = new ArrayList<>();
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 
-    private byte[] key1;
-    private byte[] key2;
-    private byte[] key3;
+public class CryptoAppController {
+    private List<byte[]> plainBytes = new ArrayList<>(); // pole dla bajtów wczytanych z pliku
+    private List<byte[]> cipherBytes = new ArrayList<>(); //pole dla plików zakodowanych
+    private List<byte[]> utfBytes = new ArrayList<>(); // pole dla okna jako utf8
 
     @FXML
     private TextField key1Field;
@@ -27,6 +27,11 @@ public class CryptoAppController {
     private TextField key2Field;
     @FXML
     private TextField key3Field;
+
+    @FXML
+    private TextField openKeyFilePath;
+    @FXML
+    private TextField saveKeyFilePath;
 
     @FXML
     private CheckBox fileCheckBox;
@@ -45,6 +50,17 @@ public class CryptoAppController {
     private TextField cipherFilePath;
 
     private DES des;  // Instancja DES
+
+    public void showAlert() {
+        Alert alert = new Alert(AlertType.INFORMATION);
+
+        alert.setTitle("Informacja");
+
+        alert.setHeaderText("Błędne klucze!");
+
+
+        alert.showAndWait();
+    }
 
     // Setter do ustawienia instancji DES
     public void setDes(DES des) {
@@ -71,6 +87,7 @@ public class CryptoAppController {
     private void onSaveCipher() {
         fileChooserMenager("save", "cipher");
     }
+
     @FXML
     private void onOpenKeys() {
         fileChooserMenager("open", "keys");
@@ -125,6 +142,7 @@ public class CryptoAppController {
                 cipherFilePath.setText(filePath);
             }
             if ("keys".equals(side)) {
+                openKeyFilePath.setText(filePath);
                 key1Field.setText(Converter.fromByteToBase64(blocks.get(0)));
                 key2Field.setText(Converter.fromByteToBase64(blocks.get(1)));
                 key3Field.setText(Converter.fromByteToBase64(blocks.get(2)));
@@ -148,6 +166,7 @@ public class CryptoAppController {
             stream.add(Converter.fromBase64ToByte(key1Field.getText()));
             stream.add(Converter.fromBase64ToByte(key2Field.getText()));
             stream.add(Converter.fromBase64ToByte(key3Field.getText()));
+            saveKeyFilePath.setText(filePath);
             FileDao.write(stream, filePath);
         }
 
@@ -161,83 +180,72 @@ public class CryptoAppController {
         key3Field.setText(Converter.fromByteToBase64(keys[2]));
     }
 
+    private boolean checkKeys() {
+        if (key1Field.getText().length() != 12 || key2Field.getText().length() != 12 || key3Field.getText().length() != 12) {
+            this.showAlert();
+            return false;
+        } else {
+
+            return true;
+        }
+    }
+
     @FXML
     protected void onEncrypt() {
-        try {
-            des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
-            if (fileCheckBox.isSelected()) {
-                cipherBytes = des.encrypt(plainBytes);
-                des.setBaseKey(Converter.fromBase64ToByte(key2Field.getText()));
-                cipherBytes = des.decrypt(cipherBytes);
-                des.setBaseKey(Converter.fromBase64ToByte(key3Field.getText()));
-                cipherBytes = des.encrypt(cipherBytes);
-                cipherTextArea.setText(cipherBytes.toString());
+        if (checkKeys()) {
+            try {
+                des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
+                if (fileCheckBox.isSelected()) {
+                    cipherBytes = des.encrypt(plainBytes);
+                    des.setBaseKey(Converter.fromBase64ToByte(key2Field.getText()));
+                    cipherBytes = des.decrypt(cipherBytes);
+                    des.setBaseKey(Converter.fromBase64ToByte(key3Field.getText()));
+                    cipherBytes = des.encrypt(cipherBytes);
+                    cipherTextArea.setText(Converter.fromListBytesToBase64(cipherBytes));
+                }
+                if (windowCheckBox.isSelected()) {
+                    cipherTextArea.setText(Converter.fromListBytesToBase64(des.encrypt(Converter.fromUTF8ToList(plainTextArea.getText(),8))));
+                    des.setBaseKey(Converter.fromBase64ToByte(key2Field.getText()));
+                    cipherTextArea.setText(Converter.fromListBytesToBase64(des.decrypt(Converter.fromBase64ToList(cipherTextArea.getText(), 8))));
+                    des.setBaseKey(Converter.fromBase64ToByte(key3Field.getText()));
+                    cipherTextArea.setText(Converter.fromListBytesToBase64(des.encrypt(Converter.fromBase64ToList(cipherTextArea.getText(), 8))));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            if (windowCheckBox.isSelected()) {
-
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+
 
     }
 
     @FXML
     protected void onDecrypt() {
-        try {
-            des.setBaseKey(Converter.fromBase64ToByte(key3Field.getText()));
-            if (fileCheckBox.isSelected()) {
-                plainBytes = des.decrypt(cipherBytes);
-                des.setBaseKey(Converter.fromBase64ToByte(key2Field.getText()));
-                plainBytes = des.encrypt(plainBytes);
-                des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
-                plainBytes = des.decrypt(plainBytes);
-                plainTextArea.setText(plainBytes.toString());
+        if (checkKeys()) {
+            try {
+                des.setBaseKey(Converter.fromBase64ToByte(key3Field.getText()));
+                if (fileCheckBox.isSelected()) {
+                    plainBytes = des.decrypt(cipherBytes);
+                    des.setBaseKey(Converter.fromBase64ToByte(key2Field.getText()));
+                    plainBytes = des.encrypt(plainBytes);
+                    des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
+                    plainBytes = des.decrypt(plainBytes);
+                    plainTextArea.setText(Converter.fromListToUTF8(plainBytes));
+                }
+                if (windowCheckBox.isSelected()) {
+                    utfBytes = des.decrypt(Converter.fromBase64ToList(cipherTextArea.getText(), 8));
+                    des.setBaseKey(Converter.fromBase64ToByte(key2Field.getText()));
+                    utfBytes = des.encrypt(utfBytes);
+                    des.setBaseKey(Converter.fromBase64ToByte(key1Field.getText()));
+                    utfBytes = des.decrypt(utfBytes);
+                    plainTextArea.setText(Converter.fromListToUTF8(utfBytes));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            if (windowCheckBox.isSelected()) {
 
-
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
     }
 
-
-
-
-
-//
-//    protected List<byte[]> mockEncrypt() {
-//        System.out.println(plainBytes);
-//        List<byte[]> blocks = new ArrayList<>();
-//
-//        for (byte[] block : plainBytes) {
-//            blocks.add(block.clone());
-//        }
-//        for (byte[] block : blocks) {
-//            for (int i = 0; i < block.length; i++) {
-//                block[i] = (byte) (block[i] + 0x1);
-//            }
-//        }
-//
-//        return blocks;
-//    }
-//
-//    protected List<byte[]> mockDecrypt() {
-//        System.out.println(cipherBytes);
-//        List<byte[]> blocks = new ArrayList<>();
-//
-//        for (byte[] block : cipherBytes) {
-//            blocks.add(block.clone());
-//        }
-//        for (byte[] block : blocks) {
-//            for (int i = 0; i < block.length; i++) {
-//                block[i] = (byte) (block[i] - 0x1);
-//            }
-//        }
-//        return blocks;
-//    }
 
 }

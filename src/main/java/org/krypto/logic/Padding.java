@@ -22,10 +22,8 @@ public class Padding {
                 newBlock[i] = (byte) padCount; // Wypełniamy nowy blok bajtami 
             }
             blocks.set(blocks.size() - 1, newBlock); // Ustawiamy nowy blok jako ostatni blok w liście bloków
-        } else if (lastBlockLen == 8) { // Jeśli długość bloku jest równa 8 bajtom, dodajemy nowy blok jako padding
-            byte[] extra = new byte[8]; // Tworzymy nowy blok o długości 8 bajtów
-            Arrays.fill(extra, (byte) 8); // Wypełniamy nowy blok bajtami o wartości 8
-            blocks.add(extra); // Dodajemy nowy blok jako padding do listy bloków
+        } else if (lastBlockLen == 8) { // Jeśli długość bloku jest równa 8 bajtom, nic nie rób
+
         } else {
       
             throw new IllegalArgumentException("Block has length > 8."); // Jeśli długość bloku jest większa niż 8 bajtów, zgłaszamy wyjątek
@@ -41,7 +39,7 @@ public class Padding {
             return; // Jeśli długość nie wynosi 8, nie ma paddingu do usunięcia
         }
         int padVal = lastBlock[7] & 0xFF; // Pobieramy wartość paddingu z ostatniego bajtu bloku
-        if (padVal < 1 || padVal > 8) { // Sprawdzamy, czy wartość paddingu jest poprawna (1-8)
+        if (padVal < 1 || padVal > 7) { // Sprawdzamy, czy wartość paddingu jest poprawna (1-8)
             return; // Jeśli wartość jest niepoprawna, nie usuwamy paddingu
         }
         for (int i = 8 - padVal; i < 8; i++) { // Sprawdzamy, czy ostatnie bajty bloku zawierają poprawny padding

@@ -24,12 +24,13 @@
                 GridPane.rowIndex="1" GridPane.columnIndex="2"/>
 
         <!-- Wczytaj klucze -->
-        <TextField fx:id="keyFilePath" promptText="Nazwa pliku kluczy" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <Button text="Wczytaj"  GridPane.rowIndex="3" GridPane.columnIndex="1" onAction="#onOpenKeys"/>
+        <TextField fx:id="openKeyFilePath" promptText="Nazwa pliku kluczy" GridPane.rowIndex="3" GridPane.columnIndex="0" editable="false"/>
+        <Button text="Wczytaj" GridPane.rowIndex="3" GridPane.columnIndex="1" onAction="#onOpenKeys"/>
 
         <!-- Zapisz klucze -->
-        <TextField fx:id="saveKeyFilePath" promptText="Nazwa pliku kluczy" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-        <Button text="Zapisz"  GridPane.rowIndex="4" GridPane.columnIndex="1" onAction="#onSaveKeys"/>
+        <TextField fx:id="saveKeyFilePath" promptText="Nazwa pliku kluczy" GridPane.rowIndex="4"
+        GridPane.columnIndex="0" editable="false"/>
+        <Button text="Zapisz" GridPane.rowIndex="4" GridPane.columnIndex="1" onAction="#onSaveKeys"/>
     </GridPane>
 
     <Separator/>
@@ -41,7 +42,7 @@
             <Label text="Tekst jawny"/>
             <TextArea fx:id="plainTextArea" prefWidth="250" prefHeight="200"/>
             <HBox spacing="10">
-                <TextField fx:id="plainFilePath" promptText="Nazwa pliku z tekstem jawnym"/>
+                <TextField fx:id="plainFilePath" promptText="Nazwa pliku z tekstem jawnym" editable="false"/>
                 <Button text="Otwórz" onAction="#onOpenPlain"/>
                 <Button text="Zapisz" onAction="#onSavePlain"/>
             </HBox>
@@ -60,7 +61,7 @@
             <Label text="Szyfrogram"/>
             <TextArea fx:id="cipherTextArea" prefWidth="250" prefHeight="200"/>
             <HBox spacing="10">
-                <TextField fx:id="cipherFilePath" promptText="Nazwa pliku z szyfrogramem"/>
+                <TextField fx:id="cipherFilePath" promptText="Nazwa pliku z szyfrogramem" editable="false"/>
                 <Button text="Otwórz" onAction="#onOpenCipher"/>
                 <Button text="Zapisz" onAction="#onSaveCipher"/>
             </HBox>
