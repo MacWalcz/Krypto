@@ -7,11 +7,12 @@ import java.math.BigInteger;
 
 public class ElGamal {
 
-    private BigInteger[] pubKey;
-    private BigInteger privKey;
+    private BigInteger[] pubKey;  //(p,g,e) gdzie p - losowa wielka liczba pierwsza
+    // g - pierwiastek pierwotny p
+    // e - g^a mod p
+    private BigInteger privKey;   //a - losowy int przy generowaniu kluczy
     private final int keyLength = 512; //długość klucza w bitach, giga duże wiadomości można
     private final SecureRandom random = new SecureRandom();
-
 
 
     private static List<BigInteger> primeFactors(BigInteger n) {
@@ -69,25 +70,40 @@ public class ElGamal {
     public void generateKeys() {
         BigInteger p = BigInteger.probablePrime(keyLength, random);
         BigInteger g = findPrimitiveNumber(p);
-        while ( !g.equals(BigInteger.ZERO) ) {
+        while (!g.equals(BigInteger.ZERO)) {
             p.nextProbablePrime();
             g = findPrimitiveNumber(p);
         }
         BigInteger a = new BigInteger(keyLength, random);
-        while(a.compareTo(BigInteger.ONE) <= 0) {
+        while (a.compareTo(BigInteger.ONE) <= 0) {
             a = new BigInteger(keyLength, random);
         }
         BigInteger e = g.modPow(a, p);
-        pubKey = new BigInteger[] { p, g, e };
+        pubKey = new BigInteger[]{p, g, e};
         privKey = a;
     }
 
-    public BigInteger[] encrypt(byte[] message) {
+    public List<BigInteger[]> encrypt(List<byte[]> message) {
+        List<BigInteger[]> ciphertext = new ArrayList<>();
 
+        for (byte[] block : message) {
+            BigInteger b = new BigInteger(keyLength, random);
+            while (b.compareTo(BigInteger.ONE) <= 0) {
+                b = new BigInteger(keyLength, random);
+            }
+            BigInteger m = new BigInteger(1, block);
+            ciphertext.add(new BigInteger[]{pubKey[1].modPow(b, pubKey[0]), m.multiply(pubKey[2].modPow(b, pubKey[0]))}); //C1 to [0] C2 to [1]
+        }
+        return ciphertext;
     }
 
-    public byte[] decrypt(BigInteger[] ciphertext) throws Exception {
-        return null;
+    public List<byte[]> decrypt(List<BigInteger[]> ciphertext) {
+        List<byte[]> decryptedmessage = new ArrayList<>();
+        for (BigInteger[] block : ciphertext) {
+            BigInteger x = block[0].modPow(privKey, pubKey[0]);
+            decryptedmessage.add(block[1].multiply(x.modPow(pubKey[0].subtract(BigInteger.TWO), pubKey[0])).toByteArray());
+        }
+        return decryptedmessage;
     }
 
 

@@ -124,7 +124,7 @@ public class CryptoAppController {
 
 
     private void openFile(String filePath, String side) {
-        List<byte[]> blocks = FileDao.read(filePath);
+        List<byte[]> blocks = FileDao.read(filePath,8);
 
         if (blocks != null) {
             StringBuilder sb = new StringBuilder();

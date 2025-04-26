@@ -6,7 +6,7 @@ import java.util.List;
 
 public class FileDao {
     //czyta z pliku dzieli na bloki nie robi paddingu
-    public static List<byte[]> read(String fileName) {
+    public static List<byte[]> read(String fileName, int blockSize) {
         List<byte[]> blocks = new ArrayList<>();
         try (FileInputStream fis = new FileInputStream(fileName)) {
             byte[] buffer = new byte[8192]; // większy bufor (np. 8KB)
@@ -15,11 +15,11 @@ public class FileDao {
             while ((bytesRead = fis.read(buffer)) != -1) {
                 int start = 0;
 
-                while (bytesRead - start >= 8) {
-                    byte[] block = new byte[8];
-                    System.arraycopy(buffer, start, block, 0, 8);
+                while (bytesRead - start >= blockSize) {
+                    byte[] block = new byte[blockSize];
+                    System.arraycopy(buffer, start, block, 0, blockSize);
                     blocks.add(block);
-                    start += 8;
+                    start += blockSize;
                 }
 
                 if (bytesRead - start > 0) {
