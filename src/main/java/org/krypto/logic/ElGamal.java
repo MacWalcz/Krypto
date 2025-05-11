@@ -1,7 +1,6 @@
 package org.krypto.logic;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.security.SecureRandom;
 import java.math.BigInteger;
 
@@ -14,6 +13,16 @@ public class ElGamal {
     private final int keyLength = 512; //długość klucza w bitach, giga duże wiadomości można
     private final SecureRandom random = new SecureRandom();
 
+
+    private BigInteger generateSafePrime(int bitLength) {
+        while (true) {
+            BigInteger q = BigInteger.probablePrime(bitLength - 1, random);
+            BigInteger p = q.multiply(BigInteger.TWO).add(BigInteger.ONE);
+            if (p.isProbablePrime(20)) {
+                return p;
+            }
+        }
+    }
 
     private static List<BigInteger> primeFactors(BigInteger n) {
         List<BigInteger> factors = new ArrayList<>();
@@ -40,27 +49,33 @@ public class ElGamal {
     }
 
 
-    private BigInteger findPrimitiveNumber(BigInteger p) {
-        BigInteger q = p.subtract(BigInteger.ONE);
-        List<BigInteger> factors = primeFactors(q);
-        BigInteger primitive = BigInteger.TWO;
-        while (primitive.compareTo(p) < 0) {
-            boolean isPrimitve = true;
-            for (BigInteger factor : factors) {
-                if (primitive.modPow(q.divide(factor), p).equals(BigInteger.ONE)) {
-                    isPrimitve = false;
+    private BigInteger findPrimitiveRoot(BigInteger p) {
+        if (!p.isProbablePrime(20)) {
+            throw new IllegalArgumentException("Liczba p musi być pierwsza.");
+        }
+
+        BigInteger phi = p.subtract(BigInteger.ONE);
+        BigInteger q = phi.divide(BigInteger.TWO);
+        Set<BigInteger> uniqueFactors = Set.of(BigInteger.TWO, q);
+
+        for (BigInteger g = new BigInteger(p.bitLength(), random).mod(p.subtract(BigInteger.TWO)).add(BigInteger.TWO); g.compareTo(p) < 0; g = new BigInteger(p.bitLength(), random).mod(p.subtract(BigInteger.TWO)).add(BigInteger.TWO)) {
+            boolean isPrimitiveRoot = true;
+            for (BigInteger uf : uniqueFactors) {
+                BigInteger pow = phi.divide(uf);
+                if (g.modPow(pow, p).equals(BigInteger.ONE)) {
+                    isPrimitiveRoot = false;
                     break;
                 }
             }
-            if (isPrimitve) {
-                return primitive;
-            } else {
-                primitive = primitive.add(BigInteger.ONE);
+            if (isPrimitiveRoot) {
+                return g;
             }
-
         }
-        return BigInteger.ZERO;
+
+        return BigInteger.valueOf(-1); // Nie znaleziono (nie powinno się zdarzyć)
     }
+
+
 
     public ElGamal() {
         this.generateKeys();
@@ -68,11 +83,11 @@ public class ElGamal {
 
 
     public void generateKeys() {
-        BigInteger p = BigInteger.probablePrime(keyLength, random);
-        BigInteger g = findPrimitiveNumber(p);
-        while (!g.equals(BigInteger.ZERO)) {
+        BigInteger p = generateSafePrime(keyLength);
+        BigInteger g = findPrimitiveRoot(p);
+        while (g.equals(BigInteger.ZERO)) {
             p.nextProbablePrime();
-            g = findPrimitiveNumber(p);
+            g = findPrimitiveRoot(p);
         }
         BigInteger a = new BigInteger(keyLength, random);
         while (a.compareTo(BigInteger.ONE) <= 0) {
