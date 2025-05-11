@@ -6,6 +6,7 @@ import javafx.stage.FileChooser;
 import org.krypto.logic.ElGamal;
 import org.krypto.logic.FileDao;
 import org.krypto.logic.Padding;
+import org.krypto.logic.Converter;
 
 import java.io.File;
 import java.math.BigInteger;
@@ -35,15 +36,19 @@ public class ElGamalController {
 
     public void setElGamal(ElGamal elGamal) {
         this.elGamal = elGamal;
+        BigInteger[] pub = elGamal.getPubKey();
+        pField.setText(Converter.fromBytetoHex(pub[0].toByteArray()));
+        gField.setText(Converter.fromBytetoHex(pub[1].toByteArray()));
+        eField.setText(Converter.fromBytetoHex(pub[2].toByteArray()));
     }
 
     @FXML
     protected void onGenerateKeys() {
         elGamal.generateKeys();
         BigInteger[] pub = elGamal.getPubKey();
-        pField.setText(Base64.getEncoder().encodeToString(pub[0].toByteArray()));
-        gField.setText(Base64.getEncoder().encodeToString(pub[1].toByteArray()));
-        eField.setText(Base64.getEncoder().encodeToString(pub[2].toByteArray()));
+        pField.setText(Converter.fromBytetoHex(pub[0].toByteArray()));
+        gField.setText(Converter.fromBytetoHex(pub[1].toByteArray()));
+        eField.setText(Converter.fromBytetoHex(pub[2].toByteArray()));
     }
 
     @FXML private void onOpenKeys() { fileManager("open", "keys"); }
@@ -66,9 +71,10 @@ public class ElGamalController {
                     List<byte[]> kb = FileDao.read(path, Integer.MAX_VALUE);
                     if (kb != null && kb.size() >= 3) {
                         openKeyFilePath.setText(path);
-                        pField.setText(Base64.getEncoder().encodeToString(kb.get(0)));
-                        gField.setText(Base64.getEncoder().encodeToString(kb.get(1)));
-                        eField.setText(Base64.getEncoder().encodeToString(kb.get(2)));
+
+                        pField.setText(Converter.fromByteToBase64(kb.get(0)));
+                        gField.setText(Converter.fromByteToBase64(kb.get(1)));
+                        eField.setText(Converter.fromByteToBase64(kb.get(2)));
                         elGamal.setPubKey(new BigInteger[]{
                                 new BigInteger(1, kb.get(0)),
                                 new BigInteger(1, kb.get(1)),
@@ -88,7 +94,7 @@ public class ElGamalController {
 
             case "plain":
                 if ("open".equals(mode)) {
-                    int blockSize = elGamal.getPubKey()[0].bitLength()/8;
+                    int blockSize = 63;
                     plainBytes = FileDao.read(path, blockSize);
                     if (plainBytes != null) {
                         plainTextArea.setText(new String(FileDao.concat(plainBytes), StandardCharsets.UTF_8));
@@ -117,9 +123,17 @@ public class ElGamalController {
     protected void onEncrypt() {
         if (windowCheckBox.isSelected()) {
             byte[] data = plainTextArea.getText().getBytes(StandardCharsets.UTF_8);
-            int bs = elGamal.getPubKey()[0].bitLength()/8;
-            List<byte[]> blocks = FileDao.split(data, bs);
-            Padding.padMessage(blocks, bs);
+            List<byte[]> blocks = FileDao.split(data, 63);
+            Padding.padMessage(blocks, 63);
+            byte[] test = {1, 2, 3};
+            List<byte[]> testBlocks = new ArrayList<>();
+            testBlocks.add(test);
+            Padding.padMessage(testBlocks, 63);
+            List<BigInteger[]> dec = elGamal.encrypt(testBlocks);
+            List<byte[]> tescik = elGamal.decrypt(dec);
+            Padding.unpadMessage(tescik, 63);
+            System.out.println(tescik);
+
             cipherBlocks = elGamal.encrypt(blocks);
             cipherTextArea.setText(FileDao.cipherToString(cipherBlocks));
         }
@@ -130,8 +144,7 @@ public class ElGamalController {
         if (windowCheckBox.isSelected()) {
             List<BigInteger[]> pairs = FileDao.parseString(cipherTextArea.getText());
             List<byte[]> msg = elGamal.decrypt(pairs);
-            int bs = elGamal.getPubKey()[0].bitLength()/8;
-            Padding.unpadMessage(msg, bs);
+            Padding.unpadMessage(msg, 63);
             plainTextArea.setText(new String(FileDao.concat(msg), StandardCharsets.UTF_8));
         }
     }

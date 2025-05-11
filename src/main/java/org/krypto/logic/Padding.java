@@ -8,7 +8,7 @@ public class Padding {
         if (blocks.isEmpty()) return;
         byte[] last = blocks.get(blocks.size()-1);
         int padCount = blockSize - last.length;
-        if (padCount == 0) padCount = blockSize;
+        if (padCount == 0) return;
         byte[] nb = Arrays.copyOf(last, blockSize);
         for (int i = blockSize - padCount; i < blockSize; i++) nb[i] = (byte) padCount;
         blocks.set(blocks.size()-1, nb);
@@ -19,11 +19,10 @@ public class Padding {
         byte[] last = blocks.get(blocks.size()-1);
         if (last.length != blockSize) return;
         int padVal = last[blockSize-1] & 0xFF;
-        if (padVal < 1 || padVal > blockSize) return;
+        if (padVal < 1 || padVal >= blockSize) return;
         for (int i = blockSize - padVal; i < blockSize; i++) {
             if ((last[i] & 0xFF) != padVal) return;
         }
-        if (padVal == blockSize && blocks.size()>1) blocks.remove(blocks.size()-1);
-        else blocks.set(blocks.size()-1, Arrays.copyOf(last, blockSize - padVal));
+        blocks.set(blocks.size()-1, Arrays.copyOf(last, blockSize - padVal));
     }
 }

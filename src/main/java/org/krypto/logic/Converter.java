@@ -1,10 +1,9 @@
 package org.krypto.logic;
 
 import java.io.ByteArrayOutputStream;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 
 public class Converter {
     public static String fromByteToBase64(byte[] data) {
@@ -68,6 +67,36 @@ public class Converter {
         return baos.toString(StandardCharsets.UTF_8);
     }
 
+    public static String fromBytetoHex(byte[] data) {
+        return HexFormat.of().formatHex(data);
     }
+
+    public static byte[] fromBytetoHex(String hex) {
+        return HexFormat.of().parseHex(hex);
+    }
+    public static BigInteger toUnsignedBigInteger(byte[] bytes) {
+        return new BigInteger(1, bytes); // 1 = force positive
+    }
+    public static byte[] fromUnsignedBigInteger(BigInteger bigInt, int targetLength) {
+        byte[] full = bigInt.toByteArray();
+
+
+        if (full.length == targetLength) {
+            return full;
+        } else if (full.length == targetLength + 1 && full[0] == 0) {
+            return Arrays.copyOfRange(full, 1, full.length);
+        } else if (full.length < targetLength) {
+
+            byte[] result = new byte[targetLength];
+            System.arraycopy(full, 0, result, targetLength - full.length, full.length);
+            return result;
+        } else {
+            throw new IllegalArgumentException("BigInteger is too large to fit in " + targetLength + " bytes");
+        }
+    }
+
+
+
+}
 
 

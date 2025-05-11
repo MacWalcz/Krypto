@@ -3,6 +3,7 @@ package org.krypto.logic;
 import java.util.*;
 import java.security.SecureRandom;
 import java.math.BigInteger;
+import org.krypto.logic.Converter;
 
 public class ElGamal {
 
@@ -106,7 +107,7 @@ public class ElGamal {
             while (b.compareTo(BigInteger.ONE) <= 0) {
                 b = new BigInteger(keyLength, random);
             }
-            BigInteger m = new BigInteger(1, block);
+            BigInteger m = Converter.toUnsignedBigInteger(block);
             ciphertext.add(new BigInteger[]{pubKey[1].modPow(b, pubKey[0]), m.multiply(pubKey[2].modPow(b, pubKey[0]))}); //C1 to [0] C2 to [1]
         }
         return ciphertext;
@@ -116,7 +117,7 @@ public class ElGamal {
         List<byte[]> decryptedmessage = new ArrayList<>();
         for (BigInteger[] block : ciphertext) {
             BigInteger x = block[0].modPow(privKey, pubKey[0]);
-            decryptedmessage.add(block[1].multiply(x.modPow(pubKey[0].subtract(BigInteger.TWO), pubKey[0])).toByteArray());
+            decryptedmessage.add(Converter.fromUnsignedBigInteger(block[1].multiply(x.modPow(pubKey[0].subtract(BigInteger.TWO), pubKey[0])).mod(pubKey[0]),63));
         }
         return decryptedmessage;
     }
