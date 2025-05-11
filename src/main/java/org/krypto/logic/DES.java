@@ -124,7 +124,7 @@ public class DES implements Cypher {
 
     @Override
     public List<byte[]> encrypt(List<byte[]> blocks) { // Kodowanie bloków
-        Padding.padMessage(blocks); // Dodawanie paddingu do wiadomości żeby była wielokrotnością 8 bajtów
+      //  Padding.padMessage(blocks); // Dodawanie paddingu do wiadomości żeby była wielokrotnością 8 bajtów
         List<byte[]> encryptedBlocks = new ArrayList<>();
         for (byte[] block : blocks) {
             byte[] encryptedBlock = encryptBlock(block);
@@ -140,7 +140,7 @@ public class DES implements Cypher {
             byte[] decryptedBlock = decryptBlock(block);
             decryptedBlocks.add(decryptedBlock);
         }
-        Padding.unpadMessage(decryptedBlocks); // Usuwanie paddingu z wiadomości aby uniknąć zbędnych zerowych bajtów
+    //    Padding.unpadMessage(decryptedBlocks); // Usuwanie paddingu z wiadomości aby uniknąć zbędnych zerowych bajtów
         return decryptedBlocks;
     }
 

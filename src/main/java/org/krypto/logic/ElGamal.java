@@ -121,5 +121,12 @@ public class ElGamal {
         return decryptedmessage;
     }
 
+    public BigInteger[] getPubKey() {
+        return pubKey;
+    }
+
+    public void setPubKey(BigInteger[] pubKey) {
+        this.pubKey = pubKey;
+    }
 
 }
