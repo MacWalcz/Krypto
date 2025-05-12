@@ -11,13 +11,15 @@
         <TextField fx:id="pField" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
         <Label text="g (root)" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
         <TextField fx:id="gField" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
-        <Label text="e (pub)" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+        <Label text="e " GridPane.rowIndex="2" GridPane.columnIndex="0"/>
         <TextField fx:id="eField" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+        <Label text="a (priv)" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+        <TextField fx:id="aField" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
         <Button text="Generuj klucze" onAction="#onGenerateKeys" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
-        <TextField fx:id="openKeyFilePath" promptText="Plik kluczy" editable="false" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
-        <Button text="Otwórz" onAction="#onOpenKeys" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
-        <TextField fx:id="saveKeyFilePath" promptText="Zapisz klucze" editable="false" GridPane.rowIndex="4" GridPane.columnIndex="0"/>
-        <Button text="Zapisz" onAction="#onSaveKeys" GridPane.rowIndex="4" GridPane.columnIndex="1"/>
+        <TextField fx:id="openKeyFilePath" promptText="Plik kluczy" editable="false" GridPane.rowIndex="3" GridPane.columnIndex="5"/>
+        <Button text="Otwórz" onAction="#onOpenKeys" GridPane.rowIndex="3" GridPane.columnIndex="6"/>
+        <TextField fx:id="saveKeyFilePath" promptText="Zapisz klucze" editable="false" GridPane.rowIndex="4" GridPane.columnIndex="5"/>
+        <Button text="Zapisz" onAction="#onSaveKeys" GridPane.rowIndex="4" GridPane.columnIndex="6"/>
     </GridPane>
     <Separator/>
     <HBox spacing="15" VBox.vgrow="ALWAYS">

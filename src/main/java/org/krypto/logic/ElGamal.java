@@ -108,7 +108,7 @@ public class ElGamal {
                 b = new BigInteger(keyLength, random);
             }
             BigInteger m = Converter.toUnsignedBigInteger(block);
-            ciphertext.add(new BigInteger[]{pubKey[1].modPow(b, pubKey[0]), m.multiply(pubKey[2].modPow(b, pubKey[0]))}); //C1 to [0] C2 to [1]
+            ciphertext.add(new BigInteger[]{pubKey[1].modPow(b, pubKey[0]), m.multiply(pubKey[2].modPow(b, pubKey[0])).mod(pubKey[0])}); //C1 to [0] C2 to [1]
         }
         return ciphertext;
     }
@@ -130,4 +130,11 @@ public class ElGamal {
         this.pubKey = pubKey;
     }
 
+    public BigInteger getPrivKey() {
+        return privKey;
+    }
+
+    public void setPrivKey(BigInteger privKey) {
+        this.privKey = privKey;
+    }
 }

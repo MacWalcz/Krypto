@@ -8,7 +8,7 @@ import org.krypto.logic.FileDao;
 import org.krypto.logic.Padding;
 import org.krypto.logic.Converter;
 
-import java.io.File;
+import java.io.*;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -23,6 +23,7 @@ public class ElGamalController {
     @FXML private TextField pField;
     @FXML private TextField gField;
     @FXML private TextField eField;
+    @FXML private TextField aField;
     @FXML private TextField openKeyFilePath;
     @FXML private TextField saveKeyFilePath;
 
@@ -37,18 +38,20 @@ public class ElGamalController {
     public void setElGamal(ElGamal elGamal) {
         this.elGamal = elGamal;
         BigInteger[] pub = elGamal.getPubKey();
-        pField.setText(Converter.fromBytetoHex(pub[0].toByteArray()));
-        gField.setText(Converter.fromBytetoHex(pub[1].toByteArray()));
-        eField.setText(Converter.fromBytetoHex(pub[2].toByteArray()));
+        pField.setText(Converter.fromBigIntegerToHex(pub[0]));
+        gField.setText(Converter.fromBigIntegerToHex(pub[1]));
+        eField.setText(Converter.fromBigIntegerToHex(pub[2]));
+        aField.setText(Converter.fromBigIntegerToHex(elGamal.getPrivKey()));
     }
 
     @FXML
     protected void onGenerateKeys() {
         elGamal.generateKeys();
         BigInteger[] pub = elGamal.getPubKey();
-        pField.setText(Converter.fromBytetoHex(pub[0].toByteArray()));
-        gField.setText(Converter.fromBytetoHex(pub[1].toByteArray()));
-        eField.setText(Converter.fromBytetoHex(pub[2].toByteArray()));
+        pField.setText(Converter.fromBigIntegerToHex(pub[0]));
+        gField.setText(Converter.fromBigIntegerToHex(pub[1]));
+        eField.setText(Converter.fromBigIntegerToHex(pub[2]));
+        aField.setText(Converter.fromBigIntegerToHex(elGamal.getPrivKey()));
     }
 
     @FXML private void onOpenKeys() { fileManager("open", "keys"); }
@@ -68,26 +71,45 @@ public class ElGamalController {
         switch (type) {
             case "keys":
                 if ("open".equals(mode)) {
-                    List<byte[]> kb = FileDao.read(path, Integer.MAX_VALUE);
-                    if (kb != null && kb.size() >= 3) {
+                    BigInteger[] kb = new BigInteger[4];
+                    try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(path))) {
+                        for (int i = 0; i < kb.length; i++) {
+                            kb[i] = (BigInteger) in.readObject();
+                        }
+
+                    } catch (IOException | ClassNotFoundException e) {
+                        e.printStackTrace();
+                    }
+
+                    if (kb != null && kb.length >= 3) {
                         openKeyFilePath.setText(path);
 
-                        pField.setText(Converter.fromByteToBase64(kb.get(0)));
-                        gField.setText(Converter.fromByteToBase64(kb.get(1)));
-                        eField.setText(Converter.fromByteToBase64(kb.get(2)));
+                        pField.setText(Converter.fromBigIntegerToHex(kb[0]));
+                        gField.setText(Converter.fromBigIntegerToHex(kb[1]));
+                        eField.setText(Converter.fromBigIntegerToHex(kb[2]));
+                        aField.setText(Converter.fromBigIntegerToHex(kb[3]));
                         elGamal.setPubKey(new BigInteger[]{
-                                new BigInteger(1, kb.get(0)),
-                                new BigInteger(1, kb.get(1)),
-                                new BigInteger(1, kb.get(2))
+                                kb[0],
+                                kb[1],
+                                kb[2]
                         });
+                        elGamal.setPrivKey(kb[3]);
                     }
                 } else {
-                    List<byte[]> stream = List.of(
-                            Base64.getDecoder().decode(pField.getText()),
-                            Base64.getDecoder().decode(gField.getText()),
-                            Base64.getDecoder().decode(eField.getText())
+                    List<BigInteger> stream = List.of(
+                            Converter.fromHexToBigInteger(pField.getText()),
+                            Converter.fromHexToBigInteger(gField.getText()),
+                            Converter.fromHexToBigInteger(eField.getText()),
+                            Converter.fromHexToBigInteger(aField.getText())
                     );
-                    FileDao.write(stream, path);
+
+                    try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(path))) {
+                        for (BigInteger number : stream) {
+                            out.writeObject(number);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     saveKeyFilePath.setText(path);
                 }
                 break;
@@ -125,17 +147,13 @@ public class ElGamalController {
             byte[] data = plainTextArea.getText().getBytes(StandardCharsets.UTF_8);
             List<byte[]> blocks = FileDao.split(data, 63);
             Padding.padMessage(blocks, 63);
-            byte[] test = {1, 2, 3};
-            List<byte[]> testBlocks = new ArrayList<>();
-            testBlocks.add(test);
-            Padding.padMessage(testBlocks, 63);
-            List<BigInteger[]> dec = elGamal.encrypt(testBlocks);
-            List<byte[]> tescik = elGamal.decrypt(dec);
-            Padding.unpadMessage(tescik, 63);
-            System.out.println(tescik);
-
-            cipherBlocks = elGamal.encrypt(blocks);
+            cipherTextArea.setText(FileDao.cipherToString( elGamal.encrypt(blocks)));
+        }
+        if (fileCheckBox.isSelected()) {
+            Padding.padMessage(plainBytes,63);
+            cipherBlocks = elGamal.encrypt(plainBytes);
             cipherTextArea.setText(FileDao.cipherToString(cipherBlocks));
+
         }
     }
 
@@ -146,6 +164,12 @@ public class ElGamalController {
             List<byte[]> msg = elGamal.decrypt(pairs);
             Padding.unpadMessage(msg, 63);
             plainTextArea.setText(new String(FileDao.concat(msg), StandardCharsets.UTF_8));
+        }
+        if (fileCheckBox.isSelected()) {
+            plainBytes = elGamal.decrypt(cipherBlocks);
+            Padding.unpadMessage(plainBytes, 63);
+            plainTextArea.setText(new String(FileDao.concat(plainBytes), StandardCharsets.UTF_8));
+
         }
     }
 }

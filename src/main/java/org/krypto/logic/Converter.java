@@ -71,7 +71,7 @@ public class Converter {
         return HexFormat.of().formatHex(data);
     }
 
-    public static byte[] fromBytetoHex(String hex) {
+    public static byte[] fromHextoByte(String hex) {
         return HexFormat.of().parseHex(hex);
     }
     public static BigInteger toUnsignedBigInteger(byte[] bytes) {
@@ -94,6 +94,18 @@ public class Converter {
             throw new IllegalArgumentException("BigInteger is too large to fit in " + targetLength + " bytes");
         }
     }
+
+    public static String fromBigIntegerToHex(BigInteger bi) {
+        return HexFormat.of().formatHex(bi.toByteArray()).replaceFirst("^00", "");
+    }
+
+
+    public static BigInteger fromHexToBigInteger(String hex) {
+        byte[] bytes = HexFormat.of().parseHex(hex);
+        return new BigInteger(1, bytes);
+    }
+
+
 
 
 
